@@ -1,0 +1,51 @@
+*{
+  margin: 0;
+  padding: 0;
+}
+a{
+  text-decoration: none;
+  color: inherit;
+}
+.underline {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 100% 1px; /* 这里的1px是下划线的高度，可以根据需要调整 */
+  padding-bottom: 2px; /* 这里的5px是下划线与文本的距离 */
+}
+.adminContainer{
+  width:100%;
+  min-height: calc(100vh - 31px);
+  background: linear-gradient(200deg, #214C90 0%, #1B174D 50%);
+  border-radius: 0px 0px 0px 0px;
+  border-top:1px solid rgba(0,0,0,0);
+  padding-bottom: 30px;
+}
+.adminContainer2{
+  width:100%;
+}
+/*鼠标覆盖通用样式*/
+.mouseHover:hover{
+  opacity: 0.8;
+  cursor: pointer;
+}
+/*鼠标点击通用样式*/
+.mouseActive:active{
+  opacity: 0.5;
+}
+
+body{
+  font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB",
+  "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
+}
+/*文本超出隐藏*/
+.fontOverflow{
+  white-space: nowrap; /* 确保全部文本在同一行 */
+  overflow: hidden; /* 隐藏超出元素的内容 */
+  text-overflow: ellipsis; /* 让超出的文本显示为省略号 */
+}
+
+textarea {
+  font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB",
+  "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
+}

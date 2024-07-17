@@ -1,0 +1,49 @@
+{
+  "name": "vite-vue",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --open --mode development",
+    "build": "vite build --mode production",
+    "buildlocal": "vite build --mode development",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@types/crypto-js": "^4.2.2",
+    "@types/marked": "^6.0.0",
+    "axios": "^1.4.0",
+    "crypto-js": "^4.2.0",
+    "echarts": "^5.4.2",
+    "element-plus": "^2.4.2",
+    "element-resize-detector": "^1.2.4",
+    "github-markdown-css": "^5.2.0",
+    "highlight.js": "^11.9.0",
+    "marked": "^10.0.0",
+    "pinia": "^2.1.7",
+    "uuid": "^9.0.1",
+    "vue": "^3.2.47",
+    "vue-clipboard2": "^0.3.3",
+    "vue-demi": "^0.14.1",
+    "vue-drag-resize": "^2.0.3",
+    "vue-echarts": "^6.5.5",
+    "vue-router": "^4.2.0",
+    "vue3-seamless-scroll": "^2.0.1",
+    "vue3-slide-verify": "^1.1.5"
+  },
+  "devDependencies": {
+    "@types/element-resize-detector": "^1.1.6",
+    "@types/node": "^20.8.8",
+    "@vitejs/plugin-legacy": "^4.0.3",
+    "@vitejs/plugin-vue": "^4.2.3",
+    "moment": "^2.29.4",
+    "rollup-plugin-external-globals": "^0.8.0",
+    "sass": "^1.69.4",
+    "swiper": "^11.0.1",
+    "terser": "^5.24.0",
+    "unplugin-auto-import": "^0.15.3",
+    "unplugin-vue-components": "^0.24.1",
+    "vite": "^4.3.2",
+    "vite-plugin-compression": "^0.5.1"
+  }
+}
