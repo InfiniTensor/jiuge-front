@@ -1,7 +1,7 @@
 <template>
   <div class="aichat-main">
     <div class="chat-class">
-      <el-button class="conf-btn" @click="openForm">设置</el-button>
+      <el-button class="conf-btn-1" @click="openForm">设置</el-button>
       <el-button class="conf-btn-2" @click="clearChat">清空</el-button>
       <el-button class="conf-btn-3" @click="downloadChat">下载</el-button>
       <div class="feed-out">
