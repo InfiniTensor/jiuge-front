@@ -12,7 +12,7 @@ import { resolve } from "path";
 import legacyPlugin from "@vitejs/plugin-legacy";
 
 export default defineConfig({
-  base: "/",
+  base: "./",
   plugins: [
     vue(),
     AutoImport({
