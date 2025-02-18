@@ -2,20 +2,40 @@
   <div class="aichat-main">
     <!-- <div class="header-r"></div> -->
     <div class="chat-class">
-      <el-button class="conf-btn-1" @click="openForm">设置</el-button>
-      <el-button class="conf-btn-2" @click="clearChat">清空</el-button>
-      <el-button class="conf-btn-3" @click="downloadChat">下载</el-button>
       <!-- <div class="left-menu">
         <div style="height: calc(100% - 0px); margin-top: 0px">
           <HistoryChat @pickTopic="pickTopic" @newTalk="newTalk" @getNewTopicId="getNewTopicId" @deleteNowTopic="deleNowTopic" :refreshSignal="refreshSignal"></HistoryChat>
         </div>
       </div> -->
 
+      <div class="use-method">
+        <div id="side_menu" :class="['side_menu', { collapsible: isCollapsible }]">
+          <div style="">
+            <div
+              v-for="(item, i) in menuItems"
+              :key="item.text"
+              class="menu_item"
+              :class="{ 'big-menu_item': item.bigicon }"
+              @mouseenter="showPopover(item)"
+              @mouseleave="hidePopover"
+              @click="toggleEvent(i)"
+            >
+              <el-image :src="item.icon" class="side-img" :class="{ 'big-side-img': item.bigicon, 'small-side-img': item.smallicon }"></el-image>
+              <span class="menu_text">{{ item.text }}</span>
+              <div v-show="item.showPopover" class="popover">{{ item.text }}</div>
+            </div>
+          </div>
+          <div class="menu_item toggle" @click="toggleMenu">
+            <el-icon><ArrowRightBold class="side-menu-icon" /></el-icon>
+          </div>
+        </div>
+      </div>
+
       <div class="feed-out">
         <ApiSet ref="apiSetRef" :type="1" :isOpen="isOpen" @close-card="handleCloseCard"></ApiSet>
       </div>
 
-      <div class="model-pick">
+      <!-- <div class="model-pick">
         <div :class="['dropdown-container', { expanded: isExpanded }]" :style="boxStyle" ref="confPlace">
           <div class="dd-header" @click="showNumber">
             <div>九格大模型</div>
@@ -44,8 +64,8 @@
             </div>
           </el-collapse-transition>
         </div>
-      </div>
-      <el-scrollbar ref="scrollArea" class="scroll-area" style="width: 100%; height: calc(100% - 150px); margin-top: 30px">
+      </div> -->
+      <el-scrollbar ref="scrollArea" class="scroll-area" style="width: 100%; height: calc(100% - 150px); margin-top: 10px">
         <el-watermark :content="['启元AI', '生成内容仅供参考']" :gap="config.gap" :z-index="config.zIndex" :font="config.font">
           <div class="all-content" ref="allOutDiv" v-if="conversation.length > 0">
             <template v-for="(conv, i) in conversation" :key="i">
@@ -309,7 +329,7 @@
 import elementResizeDetectorMaker from "element-resize-detector";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { v4 as uuidv4 } from "uuid";
-import { CaretBottom, CaretRight, DocumentCopy, CopyDocument, RefreshRight, Document, Picture, Edit, EditPen, Pouring, Sunny, CircleCheck, CircleClose } from "@element-plus/icons-vue";
+import { ArrowRightBold, CaretBottom, CaretRight, DocumentCopy, CopyDocument, RefreshRight, Document, Picture, Edit, EditPen, Pouring, Sunny, CircleCheck, CircleClose } from "@element-plus/icons-vue";
 import { marked } from "marked";
 import hljs from "highlight.js";
 import "highlight.js/styles/github.css";
@@ -321,6 +341,37 @@ import type { CSSProperties } from "vue";
 import { storeToRefs } from "pinia";
 import { useJiuyuan } from "@/store";
 import { create } from "domain";
+
+const isCollapsible = ref(true);
+const menuItems = reactive([
+  { icon: getAssetsFile("image/setting.png"), text: "设置", showPopover: false, bigicon: false, smallicon: false },
+  { icon: getAssetsFile("image/clean.png"), text: "清空", showPopover: false, bigicon: false, smallicon: false },
+  { icon: getAssetsFile("image/download.png"), text: "下载", showPopover: false, bigicon: false, smallicon: false },
+]);
+
+const toggleEvent = async (index: Number) => {
+  if (index == 0) {
+    openForm();
+  } else if (index == 1) {
+    clearChat();
+  } else if (index == 2) {
+    downloadChat();
+    // console.log(conversation.value)
+    // console.log(tempConv.value)
+  }
+};
+
+const showPopover = (item: any) => {
+  item.showPopover = true;
+};
+
+const hidePopover = (item: any) => {
+  item.showPopover = false;
+};
+
+const toggleMenu = async () => {
+  isCollapsible.value = !isCollapsible.value;
+};
 
 const isOpen = ref(false);
 const apiSetRef = ref();
@@ -340,7 +391,7 @@ watch(jiugeApiBaseUrl, (newVal) => {
 });
 
 const updateLLmParams = function (data: any) {
-  jiuyuan.seyLlmParams(data);
+  jiuyuan.setLlmParams(data);
 };
 
 const temp_dialogue_id = ref(0);
@@ -449,19 +500,19 @@ const boxStyle = computed(() => {
     return {
       width: isExpanded.value ? "260px" : "130px",
       height: isExpanded.value ? "168px" : "32px",
-      marginLeft: isExpanded.value ? "-65px" : "0px",
+      marginLeft: isExpanded.value ? "0px" : "0px",
     };
   } else if (window.innerWidth > 1440 && window.innerWidth <= 1920) {
     return {
       width: isExpanded.value ? "320px" : "160px",
       height: isExpanded.value ? "168px" : "36px",
-      marginLeft: isExpanded.value ? "-80px" : "0px",
+      marginLeft: isExpanded.value ? "0px" : "0px",
     };
   } else {
     return {
       width: isExpanded.value ? "400px" : "200px",
       height: isExpanded.value ? "168px" : "42px",
-      marginLeft: isExpanded.value ? "-100px" : "0px",
+      marginLeft: isExpanded.value ? "0px" : "0px",
     };
   }
   // margin: isExpanded.value ? '0 auto' : '0 auto',
@@ -2088,6 +2139,14 @@ watch(
   }
 );
 
+watch(
+  () => llmParam.value,
+  (newVal, oldVal) => {
+    console.log("llm update")
+    initConf();
+  }
+);
+
 // 监听变量变化并更新 Pinia Store
 watch([value1, value2, value3], ([newVal1, newVal2, newVal3]) => {
   let data = {
@@ -2408,7 +2467,7 @@ watch([value1, value2, value3], ([newVal1, newVal2, newVal3]) => {
 }
 
 .all-content {
-  padding: 0 90px;
+  padding: 0 110px;
 }
 
 .header-r {
@@ -2554,8 +2613,8 @@ watch([value1, value2, value3], ([newVal1, newVal2, newVal3]) => {
 
 .h-c1-all .c2 {
   background: #f3f4f9;
-  border-radius: 21px 7px 21px 21px;
-  padding: 8px 20px;
+  border-radius: 16px 7px 16px 16px;
+  padding: 4px 10px;
   line-height: 24px;
   /* height: 24px; */
   text-align: left;
@@ -2716,6 +2775,139 @@ textarea:focus {
   background: transparent;
 }
 
+.side_menu {
+  width: 75px;
+  /* height: 520px; */
+  background-color: #283cc4;
+  border-radius: 10px;
+  padding: 8px;
+  position: absolute;
+  right: -5px;
+  top: -1px;
+  transition: width 0.3s ease;
+  /* box-shadow: 3px 4px 16px rgba(2, 84, 172, 0.4); */
+}
+
+.menu_item {
+  color: #fff;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  border-radius: 10px;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  position: relative;
+  transition: background-color 0.3s linear;
+}
+
+.big-menu_item {
+  padding: 0 8px 0 5.6px;
+}
+
+.menu_item i {
+  font-size: 16px;
+}
+
+.menu_text {
+  max-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  opacity: 0;
+  transition: max-width 0.5s ease, opacity 0.5s ease;
+  margin-left: 8px;
+}
+
+.menu_item:hover {
+  background-color: #0467d1;
+}
+
+/* popover气泡提示 */
+.popover {
+  position: absolute;
+  top: 50%;
+  right: calc(100% + 5px);
+  transform: translateY(-50%);
+  display: none;
+  background-color: #fff;
+  border-radius: 2px;
+  padding: 8px;
+  color: #333;
+  font-size: 12px;
+  box-shadow: 0px 6px 6px rgb(0 0 0 / 10%);
+}
+
+/* css三角形: arrow-left */
+.popover::before {
+  content: "";
+  position: absolute;
+  border-width: 6px;
+  right: -12px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-style: solid;
+  border-right-color: #fff;
+  border-top-color: transparent;
+  border-left-color: transparent;
+  border-bottom-color: transparent;
+}
+
+.toggle {
+  /* position: absolute; */
+  margin-top: 40px;
+  width: calc(100%);
+  padding: 0;
+  /* bottom: 10px; */
+  justify-content: center;
+}
+
+.toggle i {
+  font-size: 16px;
+  transition: transform 0.3s ease;
+}
+
+/* collapsible时动效 */
+.side_menu.collapsible {
+  width: 36px;
+}
+
+.side_menu:not(.collapsible) .menu_text {
+  max-width: 200px;
+  opacity: 1;
+}
+
+.side_menu.collapsible .menu_text {
+  max-width: 0;
+  opacity: 0;
+}
+
+.side_menu.collapsible .toggle i {
+  transform: rotate(180deg);
+}
+
+.side_menu.collapsible .menu_item:hover .popover {
+  display: inline-block;
+}
+
+.side-img {
+  height: 20px;
+  width: 20px;
+  min-width: 20px;
+}
+.big-side-img {
+  height: 24px;
+  width: 24px;
+  min-width: 24px;
+}
+
+.small-side-img {
+  height: 18px;
+  width: 18px;
+  min-width: 18px;
+  margin-left: 1px;
+}
+
 @media only screen and (min-width: 1921px) {
   .aichat-main {
   }
@@ -2764,6 +2956,11 @@ textarea:focus {
     border-radius: 21px 7px 21px 21px;
     padding: 4px 10px;
     line-height: 24px;
+  }
+
+  .side_menu {
+    right: -10px;
+    top: -6px;
   }
 
   .dropdown-container {
@@ -2862,7 +3059,7 @@ textarea:focus {
   }
 
   .all-content {
-    padding: 0 90px 0 80px;
+    padding: 0 120px 0 40px;
     font-size: 14px;
   }
 
@@ -2880,7 +3077,7 @@ textarea:focus {
   .ai-c2 {
     background: #f3f4f9;
     border-radius: 7px 16px 16px 16px;
-    padding: 3px 8px 4px 8px;
+    padding: 5px 8px 4px 8px;
   }
 
   .ai-inner {
@@ -3262,6 +3459,14 @@ textarea:focus {
 .overflow-y-auto::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 0, 0.5);
   /* 鼠标悬浮时滚动条的颜色 */
+}
+
+.c2 h3 {
+  margin: 10px 0 5px 0;
+}
+
+.c2 h4 {
+  /* margin: 10px 0 2px 0; */
 }
 
 .c2 table {

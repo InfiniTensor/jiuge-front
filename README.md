@@ -17,6 +17,7 @@
     - [linux](#linux)
       - [安装](#安装)
       - [启动](#启动)
+  - [更新记录](#更新记录)
 
 ## 介绍
 
@@ -133,23 +134,28 @@ docker run -d -p 8080:80 jiuge-xx:latest
 ### win
 
 在win上安装可能遇到风险提示，点击下图【更多信息】展开
+
 <img src="./img/win1.png" width="50%" align=center />
 
 点击【仍要运行】即可正常进行安装
+
 <img src="./img/win2.png" width="50%" align=center />
 
 
 ### mac x64
 
 直接打开显示如下：无法打开"jiuge-front"因为无法验证开发者
+
 <img src="./img/macx642.jpg" width="40%" align=center />
 
 #### 通过 Application
 
 应用程序，按住control键，点击【jiuge-front】应用图标，点击打开
+
 <img src="./img/macx644.jpg" width="60%" align=center />
 
 会出现如下提示，选择【打开】
+
 <img src="./img/macx641.jpg" width="40%" align=center />
 
 #### 通过 系统设置
@@ -170,6 +176,7 @@ sudo xattr -rd com.apple.quarantine /Applications/jiuge-front.app
 ### mac arm64
 
 由于arm对安装软件的限制，默认点击打开会显示【已损坏】，无法打开
+
 <img src="./img/macarm1.jpg" width="40%" align=center />
 
 需要在终端执行命令，进行权限设置和修复
@@ -185,6 +192,7 @@ sudo xattr -cr /Applications/jiuge-front.app
 ```
 sudo dpkg -i jiuge-front_linux_1.0.0.deb
 ```
+
 <img src="./img/linux2.png" width="60%" align=center />
 
 #### 启动
@@ -196,3 +204,7 @@ jiuge-front
 （2）在左下角可以找到安装的应用
 
 <img src="./img/linux1.png" width="90%" align=center />
+
+## 更新记录
+
++ 【2025-02-18】 更新通用大模型的分支对话功能，优化按钮/菜单

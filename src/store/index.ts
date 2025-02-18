@@ -6,6 +6,7 @@ export const useJiuyuan = defineStore('jiuyuan', {
     return {
       jiugeApiBaseUrl: sessionStorage.getItem('jiugeApiBaseUrl') || import.meta.env.VITE_JIUGE_API_BASE_URL,
       jiugeAuthHeader: JSON.parse(sessionStorage.getItem('jiugeAuthHeader') || '{"name": "Authorization", "value": ""}'),
+      jiugeSetting: JSON.parse(sessionStorage.getItem('jiugeSetting') || '{"topk": "40", "topp": "80", "temperature": "40"}'),
 
       apiBaseUrl: sessionStorage.getItem('apiBaseUrl'),
       modelName: sessionStorage.getItem('modelName'),
@@ -15,9 +16,9 @@ export const useJiuyuan = defineStore('jiuyuan', {
         || "You are ChatGLM3, a large language model trained by Zhipu.AI. Follow the user's instructions carefully. Respond using markdown.",
 
       llmParam: JSON.parse(sessionStorage.getItem('llmParam')) || {
-        // topK: 80, // 0-200
-        // topP: 0.8, // 0-1
-        // temperature:0.8, // 0-2
+        topK: 40, // 0-200
+        topP: 80, // 0-1
+        temperature: 40, // 0-2
       },
     }
   },
@@ -34,6 +35,10 @@ export const useJiuyuan = defineStore('jiuyuan', {
     setJiugeAuthHeader(name: string, value: string) {
       this.jiugeAuthHeader = { name, value }
       sessionStorage.setItem('jiugeAuthHeader', JSON.stringify(this.jiugeAuthHeader))
+    },
+    setJiugeSetting(topk: any, topp: any, temperature: string ) {
+      this.jiugeSetting = { topk, topp, temperature }
+      sessionStorage.setItem('jiugeSetting', JSON.stringify(this.jiugeSetting))
     },
     clearJiugeAuthHeader() {
       this.jiugeAuthHeader = { name: 'Authorization', value: '' }
@@ -65,7 +70,7 @@ export const useJiuyuan = defineStore('jiuyuan', {
       sessionStorage.setItem('systemSetup', JSON.stringify(this.systemSetup))
     },
 
-    seyLlmParams(param: any) {
+    setLlmParams(param: any) {
       this.llmParam = JSON.parse(JSON.stringify(param));
       sessionStorage.setItem('llmParam', JSON.stringify(param));
       console.log(this.llmParam)

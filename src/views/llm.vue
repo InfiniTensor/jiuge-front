@@ -1,45 +1,41 @@
 <template>
   <div class="aichat-main">
     <div class="chat-class">
-      <el-button class="conf-btn-1" @click="openForm">设置</el-button>
-      <el-button class="conf-btn-2" @click="clearChat">清空</el-button>
-      <el-button class="conf-btn-3" @click="downloadChat">下载</el-button>
       <div class="feed-out">
         <ApiSet ref="apiSetRef" :type="2" :isOpen="isOpen" @close-card="handleCloseCard"></ApiSet>
       </div>
 
-      <div class="model-pick">
-        <div :class="['dropdown-container', { expanded: isExpanded }]" :style="boxStyle" ref="confPlace">
-          <div class="dd-header" @click="openForm">
-            <!-- @click="showNumber" -->
-            <div>{{ modelName }}</div>
-            <!-- <div v-if="isExpanded">
-              <el-button class="conf-btn" @click.stop="backConf">
-                <svg class="icon3" aria-hidden="true">
-                  <use xlink:href="#icon-zhongxinshengcheng"></use>
-                </svg>
-              </el-button>
-            </div> -->
-          </div>
-          <!-- <el-collapse-transition>
-            <div class="dd-content" :style="sliderContainerStyle" v-show="isExpanded">
-              <div class="slider-outer">
-                <div class="left-label">top-k:</div>
-                <el-slider v-model="value1" :marks="marks1" :step="5" :format-tooltip="formatTooltip" />
-              </div>
-              <div class="slider-outer">
-                <div class="left-label">top-p:</div>
-                <el-slider v-model="value2" :marks="marks2" :step="10" :format-tooltip="formatTooltip2" />
-              </div>
-              <div class="slider-outer">
-                <div class="left-label">temperature:</div>
-                <el-slider v-model="value3" :marks="marks3" :format-tooltip="formatTooltip3" :step="5" />
+      <div class="use-method">
+          <div id="side_menu" :class="['side_menu', { collapsible: isCollapsible }]">
+            <div style="">
+              <div
+                v-for="(item, i) in menuItems"
+                :key="item.text"
+                class="menu_item"
+                :class="{ 'big-menu_item': item.bigicon }"
+                @mouseenter="showPopover(item)"
+                @mouseleave="hidePopover"
+                @click="toggleEvent(i)"
+              >
+                <el-image :src="item.icon" class="side-img" :class="{ 'big-side-img': item.bigicon, 'small-side-img': item.smallicon }"></el-image>
+                <span class="menu_text">{{ item.text }}</span>
+                <div v-show="item.showPopover" class="popover">{{ item.text }}</div>
               </div>
             </div>
-          </el-collapse-transition> -->
+            <div class="menu_item toggle" @click="toggleMenu">
+              <el-icon><ArrowRightBold class="side-menu-icon" /></el-icon>
+            </div>
+          </div>
         </div>
-      </div>
-      <el-scrollbar ref="scrollArea" class="scroll-area" style="width: 100%; height: calc(100% - 150px); margin-top: 30px">
+
+      <!-- <div class="model-pick">
+        <div :class="['dropdown-container', { expanded: isExpanded }]" :style="boxStyle" ref="confPlace">
+          <div class="dd-header" @click="openForm">
+            <div>{{ modelName }}</div>
+          </div>
+        </div>
+      </div> -->
+      <el-scrollbar ref="scrollArea" class="scroll-area" style="width: 100%; height: calc(100% - 150px); margin-top: 10px">
         <el-watermark :content="['AI生成', '生成内容仅供参考']" :gap="config.gap" :z-index="config.zIndex" :font="config.font">
           <div class="all-content" ref="allOutDiv" v-if="conversation.length > 0">
             <template v-for="(conv, i) in conversation" :key="i">
@@ -51,7 +47,7 @@
                       <div class="c2">
                         {{ conv.content }}
                       </div>
-                      <!-- <div class="h-c3-out">
+                      <div class="h-c3-out">
                         <div class="h-c3">
                           <div class="own-pagnation">
                             <div v-if="conv.nodeInfo && conv.nodeInfo.length != 1" style="display: flex; align-items: center;">
@@ -88,7 +84,7 @@
                             </el-tooltip>
                           </div>
                         </div>
-                      </div> -->
+                      </div>
                     </div>
                     <div class="h-c1-all" v-else>
                       <div class="c2" ref="editRefOut">
@@ -101,7 +97,7 @@
                               <use xlink:href="#icon-duihao2"></use>
                             </svg>
                           </el-button>
-                          <el-button link class="btn-tooltip" @click="cancelReEdit(conv, i)" style="margin-left: 4px">
+                          <el-button link class="btn-tooltip" @click="cancelReEdit(conv, i)" style="margin-left: 0px">
                             <svg class="icon5" aria-hidden="true">
                               <use xlink:href="#icon-ruocuowu"></use>
                             </svg>
@@ -159,17 +155,17 @@
                                 </svg>
                               </el-button>
                             </el-tooltip>
-                            <!-- <el-divider direction="vertical" v-if="i == conversation.length - 1 && conv.idx != 1" /> -->
-                            <!-- <el-tooltip class="box-item" effect="dark" content="重新生成" placement="bottom" v-if="i == conversation.length - 1 && conv.idx != 1">
+                            <el-divider direction="vertical" style="margin: 0 5px ;" v-if="i == conversation.length - 1 && conv.idx != 1" />
+                            <el-tooltip class="box-item" effect="dark" content="重新生成" placement="bottom" v-if="i == conversation.length - 1 && conv.idx != 1">
                               <el-button link @click="rebuildChat(conv, i)" class="btn-tooltip" style="margin-right: 0px" circle>
                                 <svg class="icon1" aria-hidden="true">
                                   <use xlink:href="#icon-zhongxinshuru"></use>
                                 </svg>
                               </el-button>
-                            </el-tooltip> -->
+                            </el-tooltip>
                           </div>
 
-                          <!-- <div class="own-pagnation">
+                          <div class="own-pagnation">
                             <div v-if="conv.nodeInfo && conv.nodeInfo.length != 1">
                               <el-button link @click="switchBranch(conv.idx, -1)" :disabled="conv.nodeInfo.pPage == 1">
                                 <svg class="icon6" aria-hidden="true" v-if="conv.nodeInfo.pPage != 1">
@@ -193,7 +189,7 @@
                                 </svg>
                               </el-button>
                             </div>
-                          </div> -->
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -285,7 +281,7 @@
 import elementResizeDetectorMaker from "element-resize-detector";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { v4 as uuidv4 } from "uuid";
-import { CaretBottom, CaretRight, DocumentCopy, CopyDocument, RefreshRight, Document, Picture, Edit, EditPen, Pouring, Sunny, CircleCheck, CircleClose } from "@element-plus/icons-vue";
+import { ArrowRightBold, CaretBottom, CaretRight, DocumentCopy, CopyDocument, RefreshRight, Document, Picture, Edit, EditPen, Pouring, Sunny, CircleCheck, CircleClose } from "@element-plus/icons-vue";
 import { marked } from "marked";
 import hljs from "highlight.js";
 import "highlight.js/styles/github.css";
@@ -297,6 +293,38 @@ import type { CSSProperties } from "vue";
 import { storeToRefs } from "pinia";
 import { useJiuyuan } from "@/store";
 import { get } from "http";
+
+const isCollapsible = ref(true);
+const menuItems = reactive([
+  { icon: getAssetsFile("image/setting.png"), text: "设置", showPopover: false, bigicon: false, smallicon: false },
+  { icon: getAssetsFile("image/clean.png"), text: "清空", showPopover: false, bigicon: false, smallicon: false },
+  { icon: getAssetsFile("image/download.png"), text: "下载", showPopover: false, bigicon: false, smallicon: false },
+  // { icon: "#icon-icon_shangchuanjilu", text: "上传记录", showPopover: false },
+]);
+
+const toggleEvent = async (index: Number) => {
+  if (index == 0) {
+    openForm();
+  } else if (index == 1) {
+    clearChat();
+  } else if (index == 2) {
+    downloadChat();
+    // console.log(conversation.value)
+    // console.log(tempConv.value)
+  }
+};
+
+const showPopover = (item: any) => {
+  item.showPopover = true;
+};
+
+const hidePopover = (item: any) => {
+  item.showPopover = false;
+};
+
+const toggleMenu = async () => {
+  isCollapsible.value = !isCollapsible.value;
+};
 
 const isOpen = ref(false);
 const apiSetRef = ref();
@@ -316,7 +344,7 @@ watch(apiBaseUrl, (newVal) => {
 });
 
 const updateLLmParams = function (data: any) {
-  jiuyuan.seyLlmParams(data);
+  jiuyuan.setLlmParams(data);
 };
 
 const temp_dialogue_id = ref(0);
@@ -489,6 +517,7 @@ const initConversation = ref([
     isStart: true,
     idx: 0,
     parentId: -1,
+    children: [],
   },
 ]);
 // You are ChatGLM3, a large language model trained by Zhipu.AI. Follow the user's instructions carefully. Respond using markdown.
@@ -502,6 +531,7 @@ const conversation = ref([
     isStart: true,
     idx: 0,
     parentId: -1,
+    children: [],
   },
 ]);
 
@@ -549,71 +579,11 @@ const test = function () {
 const tempConv = ref([]);
 // 滚动条是否平滑滚动，如果是切换分支，需要滑动，如果是api的信息，则不平滑（因为信息来源的数据发送问题）
 const isSwitchable = ref(false);
-const showDialogueList = async function (chatList: any) {
+const showDialogueList = async function () {
   // 每次进入后会把原来的记录留存，需要初始化
-  tempConv.value = [];
-  let dtinit = {
-    speaker: "none",
-    content: "root-null",
-    loading: false,
-    idx: 0,
-    parentId: -1,
-    children: [],
-    currentPage: -1,
-    create_time: "1",
-    session_id: null,
-  };
-  // 初始化 虚拟 根节点
-  // @ts-ignore
-  tempConv.value.push(dtinit);
-
-  if (chatList) {
-    chatList.forEach((item: any, i: any) => {
-      // console.log(item)
-
-      // 防止children不规则
-      if (item.children_ids == undefined) {
-        item.children_ids = [];
-      }
-      // 在虚拟根节点下面有几个起始节点
-      if (item.parent_id == 0) {
-        tempConv.value[0].children.push(item.id);
-      }
-      if (item.type == 1) {
-        let data = {
-          speaker: "user",
-          content: item.text,
-          loading: false,
-          idx: item.id,
-          isEdit: false, //重新编辑
-          session_id: item.session_id,
-          parentId: item.parent_id,
-          create_time: item.create_time,
-          children: item.children_ids,
-          currentPage: -1,
-        };
-        // @ts-ignore
-        tempConv.value.push(data);
-      } else {
-        // 将转义的换行符\\n替换为真正的换行符\n
-        let formattedData = item.text.replace(/\\n/g, "\n");
-        let data3 = {
-          speaker: "assistant",
-          content: formattedData,
-          loading: false,
-          idx: item.id,
-          session_id: item.session_id,
-          parentId: item.parent_id,
-          create_time: item.create_time,
-          children: item.children_ids,
-          currentPage: -1,
-        };
-        // console.log("创建一个新的Spring Boot项目，你可以参考以下步骤：\n\n1. 下载或安装Java开发工具，如Eclipse或IntelliJ IDEA。\n\n2. 安装Spring Boot，通过在命令行中输入`mvn install spring-boot-devtools`来启用自动更新功能。\n\n3. 创建项目文件夹，并在其中打开命令行窗口。\n\n4. 初始化项目：在命令行中输入以下命令，将`<your-project-name>`替换为你的项目名称：\n\n```\nSpring Initializer <your-project-name>\n```\n\n按照提示操作，选择所需的依赖项。这将生成一个新的Spring Boot项目。\n\n5. 在IDE中创建项目，使用刚才生成的`pom.xml`文件。\n\n6. 创建主类`Main`，在其中编写以下代码：\n\n```java\nimport org.springframework.boot.SpringApplication;\nimport org.springframework.boot.autoconfigure.SpringBootApplication;\n\n@SpringBootApplication\npublic class Main {\n\n    public static void main(String[] args) {\n        SpringApplication.run(Main.class, args);\n    }\n}\n```\n\n7. 保存文件，然后在IDE中运行项目。现在你已经成功创建了一个新的Spring Boot项目！\n\n接下来，你可以根据需要添加其他依赖库和编写代码来扩展项目功能。")
-        // @ts-ignore
-        tempConv.value.push(data3);
-      }
-    });
-  }
+  // console.log(tempConv.value);
+  tempConv.value = JSON.parse(localStorage.getItem("conv"));
+  temp_dialogue_id.value = tempConv.value.length;
   console.log(tempConv.value);
 
   await updateConversationForLatestLeaf();
@@ -922,7 +892,6 @@ const getData = async function (type: any) {
           session_id: myUuid.value,
           content_type: 1,
         };
-        console.log(dt);
         saveRes = saveData(dt);
       } catch (error) {
         console.log(error);
@@ -937,10 +906,7 @@ const getData = async function (type: any) {
         session_id: myUuid.value,
         content_type: 1,
       };
-      console.log(dt);
       saveRes = saveData(dt);
-      console.log(saveRes);
-      console.log(saveRes.data.dialogue_id);
     }
 
     console.log(saveRes);
@@ -975,19 +941,27 @@ const conversationAddItem = function (data: any) {
   console.log(parentNode);
   parentNode.children.push(data.idx);
 
+  console.log(parentNode)
   const childIndex = parentNode.children.indexOf(data.idx);
   if (childIndex !== -1) {
     parentNode.currentPage = childIndex + 1;
   }
+
   data.nodeInfo = {
     pPage: parentNode.currentPage, //兄弟节点的位置
     length: parentNode.children.length, //兄弟节点
   };
 
+  console.log(data);
+
   // @ts-ignore
   tempConv.value.push(data);
 
   conversation.value.push(data);
+  console.log(tempConv.value);
+  console.log(conversation.value);
+  // console.log(data);
+  // console.log(data);
 };
 
 const timeout = 20000; // 超时时间设置为20秒
@@ -1015,6 +989,7 @@ const getInfer = async function (textInfo: any, dp: any, type: any) {
     content: "",
     loading: true,
     idx: -1,
+    // idx: JSON.parse(JSON.stringify(tempConv.value.length)),
     isEdit: false, //重新编辑
     session_id: myUuid.value,
     parentId: conversation.value[conversation.value.length - 1].idx, // parentid就是之前的最后一条
@@ -1193,7 +1168,8 @@ const responseProcess = async function (response: any, data2: any) {
   newConv.loading = false;
   console.log(conversation.value);
   localStorage.removeItem("conv");
-  localStorage.setItem("conv", JSON.stringify(conversation.value));
+  localStorage.setItem("conv", JSON.stringify(tempConv.value));
+  // localStorage.setItem("conv", JSON.stringify(conversation.value));
 };
 
 // 异常离开或者切换的标志  0:初始化  1:pickTopic  2:newTalk
@@ -1274,153 +1250,15 @@ const abortRequest = function (type: any) {
   }
 };
 
-// const forkData = async function (indexData: any, content: any, type: any) {
-//   console.log(indexData);
-//   console.log(type);
-//   try {
-//     const res = await axios.post(`${jiugeApiBaseUrl.value}/fork`, indexData, {
-//       headers: {
-//         Authorization: `Bearer ${JIUGETOKEN}`, // 使用 Bearer 方案添加令牌
-//       },
-//       timeout: 4000, // 设置超时时间为 5000 毫秒（4 秒）
-//     });
-//     console.log(res);
-//     if (res.status == 200) {
-//       console.log(conversation.value.length);
-//       getInfer(content, conversation.value.length - 2, type);
-//     }
-//     // getLoading.value = true;
-//     // let inputs = [{ role: "user", content: editText.value }];
-//     // console.log();
-//     //   let data2 = conversation.value[conversation.value.length - 1];
-//     //   controller.value = new AbortController();  // 只创建一次
-//     //   axiosOperate(inputs, data2)
-//   } catch (e: any) {
-//     console.log("Error in forkData:", e);
-//     const errorData = e.response;
-//     console.log(errorData);
-//     if (e.response.status === 404) {
-//       console.log(errorData);
-//       if (errorData.data.status === 404) {
-//         console.log("fork时发现历史信息丢失，等待上传！");
-//         // await uploadHistoryFork();
-//         // 会话丢失，直接开启新对话，把两次infer变成一次
-//         if (type == 1) {
-//           getInfer(null, 0, 3);
-//         } else {
-//           getInfer(null, 0, 4);
-//         }
-//       } else if (errorData.data.startsWith("Sorry, Page Not Found")) {
-//         console.log("Sorry, Page Not Found");
-//         // forkData(indexData, content, type);
-//         // getLoading.value = false;
-//         if (type == 1) {
-//           getInfer(null, 0, 3);
-//         } else {
-//           getInfer(null, 0, 4);
-//         }
-//         // inputState.value = false;
-//       } else {
-//         console.log("getLoading.value = false; 4 ");
-//         getLoading.value = false;
-//       }
-//     } else if (e.response.status === 406) {
-//       if (errorData.status === 406) {
-//         ElMessage({
-//           message: "该会话正在推理中，不可重复进入推理服务，请稍后重试！",
-//           type: "warning",
-//         });
-//       }
-//     } else if (e.response.status === 409) {
-//       if (errorData.status === 409) {
-//       }
-//     } else if (e.response.status === 400) {
-//       if (errorData.status === 400) {
-//       }
-//     } else if (e.response.status === 416) {
-//       if (errorData.status === 416) {
-//       }
-//     } else if (e.response.status === 500 || e.response.status === 502 || e.code === "ECONNABORTED") {
-//       if (e.code === "ECONNABORTED") {
-//         console.error("Request timed out");
-//         ElMessage({
-//           message: "服务器连接超时，请及时联系系统管理员！",
-//           type: "warning",
-//         });
-//       } else {
-//         ElMessage({
-//           message: "服务器连接失败，请及时联系系统管理员！",
-//           type: "warning",
-//         });
-//       }
-
-//       // 只有在服务器500的时候才会在fork的时候主动添加对话错误的信息
-//       let data2 = {
-//         speaker: "assistant",
-//         content: "",
-//         loading: true,
-//         idx: -1,
-//         isEdit: false, //重新编辑
-//         session_id: myUuid.value,
-//         parentId: conversation.value[conversation.value.length - 1].idx, // parentid就是之前的最后一条
-//         children: [],
-//         currentPage: -1,
-//       };
-//       await conversationAddItem(data2);
-
-//       await handleError(e, data2);
-
-//       throw new Error(`HTTP error! status: ${e.response.status}`);
-//     } else {
-//       console.log("getLoading.value = false; 5 ");
-//       getLoading.value = false;
-
-//       throw new Error(`HTTP error! status: ${e.response.status}`);
-//       //       if (e.response.status === 401) {
-
-//       // }
-//     }
-//     throw e;
-//     console.log("Error in forkData", e);
-//   }
-// };
-
-// const uploadHistory = async function () {
-//   console.log("历史信息丢失，等待上传！");
-//   console.log(conversation.value);
-
-//   let inputs: any = [];
-//   conversation.value.forEach((item: any, index: any) => {
-//     console.log();
-//     if (item.speaker == "none" || item.content == "") {
-//     } else {
-//       inputs.push({ role: item.speaker, content: item.content });
-//     }
-//   });
-//   console.log(inputs);
-
-//   // 创建 AbortController 实例
-//   controller.value = new AbortController();
-//   console.log(myUuid.value);
-//   let data2 = conversation.value[conversation.value.length - 1];
-
-//   console.log(data2);
-//   axiosOperate(inputs, data2);
-// };
-
-// const axiosOperate = async function (inputs: any, data2: any) {
-//   console.log(inputs);
-//   console.log(data2);
-//   try {
-//     const response = await fetchRequest(inputs, 0);
-//     await responseProcess(response, data2);
-//   } catch (error: any) {
-//     handleError(error, data2);
-//   }
-// };
+const forkData = async function (indexData: any, content: any, type: any) {
+  if (type == 1) {
+    getInfer(null, 0, 3);
+  } else {
+    getInfer(null, 0, 4);
+  }
+}
 
 // 调整textarea高度的函数
-
 const changeHeight = () => {
   // console.log("changeHeight");
   if (window.innerWidth <= 1440) {
@@ -1464,6 +1302,7 @@ const changeHeight = () => {
       eleBtn.style.height = nowHeight + "px";
     }
   }
+  console.log("changeHeight");
 };
 
 // 重置textarea高度
@@ -1532,7 +1371,7 @@ const renderMarkdown = function () {
     </div>`;
     },
     paragraph(text: any) {
-      console.log(text);
+      // console.log(text);
       return `<p style="white-space:pre-wrap;">${text}</p >`;
     },
   };
@@ -1541,7 +1380,7 @@ const renderMarkdown = function () {
 
 // @ts-ignore
 const mdToHtml = function (md: any, conv: any) {
-  console.log(md)
+  // console.log(md)
   if (md == "") {
     return "<p></p>";
   }
@@ -1587,7 +1426,7 @@ const scrollToBottom = async () => {
   // 如果用户已滚动查看旧信息，则不自动滚动至底部
   const container = scrollArea.value?.$el.querySelector(".el-scrollbar__wrap");
   if (!isAutoScrollEnabled.value) {
-    console.log("===========not allow auto scrollToBottom=============");
+    // console.log("===========not allow auto scrollToBottom=============");
   } else if (isSwitchable.value) {
     await nextTick();
     container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
@@ -1758,6 +1597,9 @@ const reReEdit = async function (item: any, index: number) {
   }
 };
 
+// const confirmReEdit = async function (item: any, index: number) {
+//   console.log(conversation.value)
+// }
 // 对话是一棵树形结构，TreeNode，切换分支
 const confirmReEdit = async function (item: any, index: number) {
   item.isEdit = false;
@@ -1791,6 +1633,7 @@ const confirmReEdit = async function (item: any, index: number) {
   let newBranchData = JSON.parse(JSON.stringify(item));
   newBranchData.children = [];
   newBranchData.content = editText.value;
+  // saveRes.data.dialogue_id
   newBranchData.idx = saveRes.data.dialogue_id;
   newBranchData.nodeInfo.pPage += 1;
   newBranchData.nodeInfo.length += 1;
@@ -1912,6 +1755,7 @@ const judgeInputState = async function () {
       await changeHeight();
     }
   }
+  // console.log(unSupportInput.value);
 };
 
 const beforeUnloadHandler = function (e: any) {
@@ -1937,7 +1781,7 @@ const initTemp = function(){
   //       tempConv.value.push(data);
   console.log(conversation.value);
   console.log(tempConv.value);
-  tempConv.value = JSON.parse(JSON.stringify(conversation.value));
+  showDialogueList();
 }
 
 const clearChat = function () {
@@ -1973,11 +1817,12 @@ const downloadChat = function () {
 onMounted(async () => {
   // localStorage.getItem("")
   let ccc: any = localStorage.getItem("conv");
-  if(ccc){
+  if (ccc) {
     topicID.value = 1;
-    conversation.value = JSON.parse(ccc);
+    // conversation.value = JSON.parse(ccc);
     initTemp();
   }
+
   (window as any).copy = vueCopy;
   // initUUID();
   initConf();
@@ -2011,7 +1856,7 @@ watch(
   (newVal, oldVal) => {
     // 如果最新生成的ai内容变化，就向下滚
     // console.log(newVal[newVal.length-1]!== oldVal[newVal.length-1])
-    console.log("change conversation");
+    // console.log("change conversation");
     if (!isEdit.value) {
       scrollToBottom();
     }
@@ -2071,6 +1916,155 @@ watch([value1, value2, value3], ([newVal1, newVal2, newVal3]) => {
   background: #b1e0fb;
   top: 120px;
 }
+
+.use-method {
+  position: absolute;
+  right: 35px;
+  top: 30px;
+  z-index: 1000;
+}
+
+.side_menu {
+  width: 75px;
+  /* height: 520px; */
+  background-color: #283cc4;
+  border-radius: 10px;
+  padding: 8px;
+  position: absolute;
+  right: -5px;
+  top: -1px;
+  transition: width 0.3s ease;
+  /* box-shadow: 3px 4px 16px rgba(2, 84, 172, 0.4); */
+}
+
+.menu_item {
+  color: #fff;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  border-radius: 10px;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  position: relative;
+  transition: background-color 0.3s linear;
+}
+
+.big-menu_item {
+  padding: 0 8px 0 5.6px;
+}
+
+.menu_item i {
+  font-size: 16px;
+}
+
+.menu_text {
+  max-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  opacity: 0;
+  transition: max-width 0.5s ease, opacity 0.5s ease;
+  margin-left: 8px;
+}
+
+.menu_item:hover {
+  background-color: #0467d1;
+}
+
+/* popover气泡提示 */
+.popover {
+  position: absolute;
+  top: 50%;
+  right: calc(100% + 5px);
+  transform: translateY(-50%);
+  display: none;
+  background-color: #fff;
+  border-radius: 2px;
+  padding: 8px;
+  color: #333;
+  font-size: 12px;
+  box-shadow: 0px 6px 6px rgb(0 0 0 / 10%);
+}
+
+/* css三角形: arrow-left */
+.popover::before {
+  content: "";
+  position: absolute;
+  border-width: 6px;
+  right: -12px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-style: solid;
+  border-right-color: #fff;
+  border-top-color: transparent;
+  border-left-color: transparent;
+  border-bottom-color: transparent;
+}
+
+.toggle {
+  /* position: absolute; */
+  margin-top: 40px;
+  width: calc(100%);
+  padding: 0;
+  /* bottom: 10px; */
+  justify-content: center;
+}
+
+.toggle i {
+  font-size: 16px;
+  transition: transform 0.3s ease;
+}
+
+/* collapsible时动效 */
+.side_menu.collapsible {
+  width: 36px;
+}
+
+.side_menu:not(.collapsible) .menu_text {
+  max-width: 200px;
+  opacity: 1;
+}
+
+.side_menu.collapsible .menu_text {
+  max-width: 0;
+  opacity: 0;
+}
+
+.side_menu.collapsible .toggle i {
+  transform: rotate(180deg);
+}
+
+.side_menu.collapsible .menu_item:hover .popover {
+  display: inline-block;
+}
+
+.side-img {
+  height: 20px;
+  width: 20px;
+  min-width: 20px;
+}
+.big-side-img {
+  height: 24px;
+  width: 24px;
+  min-width: 24px;
+}
+
+.small-side-img {
+  height: 18px;
+  width: 18px;
+  min-width: 18px;
+  margin-left: 1px;
+}
+
+@media only screen and (max-width: 1440px) {
+
+  .side_menu {
+    right: -10px;
+    top: -6px;
+  }
+}
+
 </style>
 
 <style>
