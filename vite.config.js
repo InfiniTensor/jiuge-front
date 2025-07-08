@@ -98,12 +98,11 @@ export default defineConfig({
     port: 8011, // 设置启动端口号
     host: "0.0.0.0",
     // proxy: {
-    //   "/api": {
-    //     target: APIURl, //实际请求地址
+    //   '/api': {
+    //     target: "http://127.0.0.1:23456",	//实际请求地址
     //     changeOrigin: true,
-    //     rewrite: (path) => path.replace(/^\/api/, ""),
+    //     rewrite: (path) => path.replace(/^\//, '')
     //   },
-      
     // },
   },
 });

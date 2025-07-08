@@ -1,41 +1,41 @@
 <template>
   <div class="aichat-main">
     <div class="chat-class">
+      <div class="left-menu">
+        <!-- <el-button @click="getStatus()"/el-button> -->
+        <div style="height: calc(100% - 0px); margin-top: 0px">
+          <HistoryChat @pickTopic="pickTopic" @newTalk="newTalk" @getNewTopicId="getNewTopicId" @deleteNowTopic="deleNowTopic" :refreshSignal="refreshSignal"></HistoryChat>
+        </div>
+      </div>
+
       <div class="feed-out">
-        <ApiSet ref="apiSetRef" :type="2" :isOpen="isOpen" @close-card="handleCloseCard"></ApiSet>
+        <ApiSet ref="apiSetRef" :type="2" :isOpen="isOpen" :topicID="topicID" @close-card="handleCloseCard"></ApiSet>
       </div>
 
       <div class="use-method">
-          <div id="side_menu" :class="['side_menu', { collapsible: isCollapsible }]">
-            <div style="">
-              <div
-                v-for="(item, i) in menuItems"
-                :key="item.text"
-                class="menu_item"
-                :class="{ 'big-menu_item': item.bigicon }"
-                @mouseenter="showPopover(item)"
-                @mouseleave="hidePopover"
-                @click="toggleEvent(i)"
-              >
-                <el-image :src="item.icon" class="side-img" :class="{ 'big-side-img': item.bigicon, 'small-side-img': item.smallicon }"></el-image>
-                <span class="menu_text">{{ item.text }}</span>
-                <div v-show="item.showPopover" class="popover">{{ item.text }}</div>
-              </div>
-            </div>
-            <div class="menu_item toggle" @click="toggleMenu">
-              <el-icon><ArrowRightBold class="side-menu-icon" /></el-icon>
+        <div id="side_menu" :class="['side_menu', { collapsible: isCollapsible }]">
+          <div style="">
+            <div
+              v-for="(item, i) in menuItems"
+              :key="item.text"
+              class="menu_item"
+              :class="{ 'big-menu_item': item.bigicon }"
+              @mouseenter="showPopover(item)"
+              @mouseleave="hidePopover"
+              @click="toggleEvent(i)"
+            >
+              <el-image :src="item.icon" class="side-img" :class="{ 'big-side-img': item.bigicon, 'small-side-img': item.smallicon }"></el-image>
+              <span class="menu_text">{{ item.text }}</span>
+              <div v-show="item.showPopover" class="popover">{{ item.text }}</div>
             </div>
           </div>
+          <div class="menu_item toggle" @click="toggleMenu">
+            <el-icon><ArrowRightBold class="side-menu-icon" /></el-icon>
+          </div>
         </div>
+      </div>
 
-      <!-- <div class="model-pick">
-        <div :class="['dropdown-container', { expanded: isExpanded }]" :style="boxStyle" ref="confPlace">
-          <div class="dd-header" @click="openForm">
-            <div>{{ modelName }}</div>
-          </div>
-        </div>
-      </div> -->
-      <el-scrollbar ref="scrollArea" class="scroll-area" style="width: 100%; height: calc(100% - 150px); margin-top: 10px">
+      <el-scrollbar ref="scrollArea" class="scroll-area" style="width: 80%; height: calc(100% - 150px); margin-top: 20px">
         <el-watermark :content="['AI生成', '生成内容仅供参考']" :gap="config.gap" :z-index="config.zIndex" :font="config.font">
           <div class="all-content" ref="allOutDiv" v-if="conversation.length > 0">
             <template v-for="(conv, i) in conversation" :key="i">
@@ -50,7 +50,7 @@
                       <div class="h-c3-out">
                         <div class="h-c3">
                           <div class="own-pagnation">
-                            <div v-if="conv.nodeInfo && conv.nodeInfo.length != 1" style="display: flex; align-items: center;">
+                            <div v-if="conv.nodeInfo && conv.nodeInfo.length != 1" style="display: flex; align-items: center">
                               <el-button link @click="switchBranch(conv.idx, -1)" :disabled="conv.nodeInfo.pPage == 1">
                                 <svg class="icon6" aria-hidden="true" v-if="conv.nodeInfo.pPage != 1">
                                   <use xlink:href="#icon-xiangzuo1"></use>
@@ -75,13 +75,13 @@
                             </div>
                           </div>
                           <div class="edit-btn-out" v-if="!getLoading">
-                            <el-tooltip class="box-item" effect="dark" content="编辑" placement="bottom">
-                              <el-button link @click="reEdit(conv, i)" circle>
-                                <svg class="icon1" aria-hidden="true">
-                                  <use xlink:href="#icon-bianji1"></use>
-                                </svg>
-                              </el-button>
-                            </el-tooltip>
+                            <!-- <el-tooltip class="box-item" effect="dark" content="编辑" placement="bottom"> -->
+                            <el-button link @click="reEdit(conv, i)" circle size="small" style="padding: 2px">
+                              <svg class="icon1" aria-hidden="true">
+                                <use xlink:href="#icon-bianji1"></use>
+                              </svg>
+                            </el-button>
+                            <!-- </el-tooltip> -->
                           </div>
                         </div>
                       </div>
@@ -120,20 +120,59 @@
                       <el-image :src="aiAvatar" class="ai-img"></el-image>
                     </div>
                     <div class="ai-c1">
+                      <div class="ai-c1-think" v-if="conv.think">
+                        <el-button class="think-title" @click="changeContent(conv)">
+                          深度思考
+                          <el-icon size="0.8em" class="icon-move" :class="{ move: !conv.showContent }">
+                            <ArrowUpBold />
+                          </el-icon>
+                        </el-button>
+                        <el-collapse-transition>
+                          <div v-show="conv.showContent" class="think-area">
+                            <div :class="{ 'warn-content': conv.content == server_error }" class="think-c2" v-html="conv.htmlThinkContent"></div>
+                          </div>
+                        </el-collapse-transition>
+                      </div>
                       <!-- v-html="markdownToHtml" -->
-                      <div class="ai-c2" :class="{ 'warn-outer': conv.content == server_error }">
+                      <!-- v-if="conv.content" -->
+                      <div
+                        class="ai-c2"
+                        v-if="conv.content || conv.content == ''"
+                        :class="{ 'warn-outer': conv.content == server_error, 'empty-outer': conv.content == '', 'not-empty-outer': conv.content != '' }"
+                      >
                         <div v-if="conv.speaker == 'default'" class="ai-title">
                           {{ conv.title }}
                         </div>
-                        <div class="warn-icon" v-if="conv.content == server_error">
+                        <div class="warn-icon" v-if="!conv.content && !getLoading && conv.htmlThinkContent">
+                          <svg class="icon2" aria-hidden="true">
+                            <use xlink:href="#icon-jinggao3"></use>
+                          </svg>
+                        </div>
+                        <div class="warn-icon" v-else-if="!conv.content && !getLoading">
+                          <svg t="1751264263225" class="icon2" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="37992" width="200" height="200">
+                            <path
+                              d="M512 876.8c-49.2 0-97-9.7-142-28.7-43.5-18.4-82.5-44.7-116-78.2s-59.8-72.5-78.2-116c-19-45-28.7-92.8-28.7-142s9.7-97 28.7-142c18.4-43.5 44.7-82.5 78.2-116s72.5-59.8 116-78.2c45-19 92.8-28.7 142-28.7s97 9.7 142 28.7c43.5 18.4 82.5 44.7 116 78.2s59.8 72.5 78.2 116c19 45 28.7 92.8 28.7 142s-9.7 97-28.7 142c-18.4 43.5-44.7 82.5-78.2 116s-72.5 59.8-116 78.2c-45 19.1-92.8 28.7-142 28.7z m0-649.6c-76.1 0-147.6 29.6-201.4 83.4-53.8 53.8-83.4 125.3-83.4 201.4 0 76.1 29.6 147.6 83.4 201.4 53.8 53.8 125.3 83.4 201.4 83.4 76.1 0 147.6-29.6 201.4-83.4s83.4-125.3 83.4-201.4c0-76.1-29.6-147.6-83.4-201.4-53.8-53.8-125.3-83.4-201.4-83.4z"
+                              fill="#9f9f9f"
+                              p-id="37993"
+                            ></path>
+                            <path d="M472 328.7h80v228h-80zM472 618.2h80v77.1h-80z" fill="#9f9f9f" p-id="37994"></path>
+                          </svg>
+                        </div>
+                        <div class="warn-icon" v-if="conv.content && conv.content == server_error">
                           <svg class="icon2" aria-hidden="true">
                             <use xlink:href="#icon-jinggao3"></use>
                           </svg>
                         </div>
                         <!-- v-html="mdToHtml(conv.content, conv)" -->
-                        <div :class="{ 'result-streaming': getLoading && conversation.length-1 == i, 'warn-content': conv.content == server_error }" class="c2" 
-                          v-html="conv.htmlContent"
-                        ></div>
+                        <div v-if="conv.content">
+                          <div :class="{ 'result-streaming': getLoading && conversation.length - 1 == i, 'warn-content': conv.content == server_error }" class="c2" v-html="conv.htmlContent"></div>
+                        </div>
+                        <div v-else-if="conv.content == '' && conv.htmlThinkContent">
+                          <div :class="{ 'result-streaming': getLoading && conversation.length - 1 == i }" class="c2" v-html="conv.htmlContent"></div>
+                        </div>
+                        <div v-else-if="conv.content == ''">
+                          <div :class="{ 'result-streaming': getLoading && conversation.length - 1 == i }" class="c2" ></div>
+                        </div>
                         <!-- <div>{{ x }}</div> -->
                         <div v-if="conv.isStart" class="start-prompt">
                           <div v-for="(item, j) in initPrompt" :key="j" class="prompt-style">
@@ -145,7 +184,7 @@
                         </div>
                       </div>
                       <div class="ai-c3-out">
-                        <div class="ai-c3" v-if="!conv.loading && !conv.title">
+                        <div class="ai-c3" v-if="!conv.loading && !conv.title && conv.content">
                           <div class="ai-c3-btn">
                             <!-- <el-divider direction="vertical" /> -->
                             <el-tooltip class="box-item" effect="dark" content="复制markdown" placement="bottom">
@@ -155,14 +194,14 @@
                                 </svg>
                               </el-button>
                             </el-tooltip>
-                            <el-divider direction="vertical" style="margin: 0 5px ;" v-if="i == conversation.length - 1 && conv.idx != 1" />
-                            <el-tooltip class="box-item" effect="dark" content="重新生成" placement="bottom" v-if="i == conversation.length - 1 && conv.idx != 1">
+                            <!-- <el-divider direction="vertical" style="margin: 0 5px ;" v-if="i == conversation.length - 1 && conv.idx != 1" /> -->
+                            <!-- <el-tooltip class="box-item" effect="dark" content="重新生成" placement="bottom" v-if="i == conversation.length - 1 && conv.idx != 1">
                               <el-button link @click="rebuildChat(conv, i)" class="btn-tooltip" style="margin-right: 0px" circle>
                                 <svg class="icon1" aria-hidden="true">
                                   <use xlink:href="#icon-zhongxinshuru"></use>
                                 </svg>
                               </el-button>
-                            </el-tooltip>
+                            </el-tooltip> -->
                           </div>
 
                           <div class="own-pagnation">
@@ -202,16 +241,15 @@
         </el-watermark>
       </el-scrollbar>
 
-      <div class="stable-position" v-if="!isAutoScrollEnabled && !getLoading" @click="scrollToBottomManual">
-        <el-button link class="btn-tooltip">
-          <svg class="icon5" aria-hidden="true">
-            <use xlink:href="#icon-xiangxia31"></use>
-          </svg>
-        </el-button>
-      </div>
-
       <!-- 输入区 -->
       <div class="bottom-item" id="inputArea">
+        <div class="stable-position" v-if="!isAutoScrollEnabled && !getLoading" @click="scrollToBottomManual">
+          <el-button link class="btn-tooltip">
+            <svg class="icon5" aria-hidden="true">
+              <use xlink:href="#icon-xiangxia31"></use>
+            </svg>
+          </el-button>
+        </div>
         <div class="file-position">
           <!-- 文件 or 图像 -->
         </div>
@@ -274,6 +312,7 @@
         </div>
       </div>
     </div>
+    <!-- <el-button @click="xx">xx</el-button> -->
   </div>
 </template>
 
@@ -281,25 +320,155 @@
 import elementResizeDetectorMaker from "element-resize-detector";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { v4 as uuidv4 } from "uuid";
-import { ArrowRightBold, CaretBottom, CaretRight, DocumentCopy, CopyDocument, RefreshRight, Document, Picture, Edit, EditPen, Pouring, Sunny, CircleCheck, CircleClose } from "@element-plus/icons-vue";
+import {
+  ArrowUpBold,
+  ArrowRightBold,
+  CaretBottom,
+  CaretRight,
+  DocumentCopy,
+  CopyDocument,
+  RefreshRight,
+  Document,
+  Picture,
+  Edit,
+  EditPen,
+  Pouring,
+  Sunny,
+  CircleCheck,
+  CircleClose,
+} from "@element-plus/icons-vue";
 import { marked } from "marked";
 import hljs from "highlight.js";
 import "highlight.js/styles/github.css";
 import { getAssetsFile } from "@/utils/tools.js";
 const ApiSet = defineAsyncComponent(() => import("@/views/ApiSet.vue"));
-
+const HistoryChat = defineAsyncComponent(() => import("./topic.vue"));
 import axios from "axios";
 import type { CSSProperties } from "vue";
 import { storeToRefs } from "pinia";
 import { useJiuyuan } from "@/store";
-import { get } from "http";
+import { cloneDeep } from "lodash";
+import { CLIENT_RENEG_WINDOW } from "tls";
+
+const changeContent = function (conv) {
+  conv.showContent = !conv.showContent;
+};
+
+const pickTopic = async function (item: any) {
+  console.log(item);
+  editIndex = -1;
+  console.log(item.topic_id);
+  if (topicItem.value) {
+    oldTopic.value = JSON.parse(JSON.stringify(topicItem.value));
+  }
+
+  topicID.value = item.topic_id;
+  topicItem.value = item;
+  console.log(isAutoScrollEnabled.value);
+  console.log(getLoading.value);
+  // 如果正在推导，切换话题前需要先终止并触发abort，然后
+  if (getLoading.value) {
+    // getLoading.value = false;
+    console.log(111);
+    await abortRequest(3);
+  } else {
+  }
+  if (leaveFlag.value == 0) {
+    try {
+      await showDialogueList(2);
+    } catch (error) {
+      console.log("请求报错：", error);
+    }
+    await initParams();
+  }
+};
+
+const getNewTopicId = function (id: any) {
+  console.log(id);
+  topicID.value = id;
+};
+
+const deleNowTopic = function () {
+  // 清空已经在下方输入的信息
+  textarea.value = "";
+
+  if (!isCollapsible.value) {
+    toggleMenu();
+  }
+
+  editIndex = -1;
+  topicID.value = 0;
+  conversation.value = JSON.parse(JSON.stringify(initConversation.value));
+  initParams();
+};
+
+const newTalk = async function () {
+  // 如果在开启新话题前原来的推理仍在进行，则先停止再继续其他操作
+  if (topicItem.value) {
+    oldTopic.value = JSON.parse(JSON.stringify(topicItem.value));
+  }
+  if (getLoading.value) {
+    await abortRequest(4);
+  }
+
+  if (leaveFlag.value == 0) {
+    editIndex = -1;
+    conversation.value = JSON.parse(JSON.stringify(initConversation.value));
+    ElMessage({
+      message: "已开始新话题",
+      type: "success",
+    });
+    initParams();
+    initTopic();
+  }
+};
+
+function generateRandomName(prefix = "话题") {
+  // 生成 4 位随机字符串（字母 + 数字）
+  const randomStr = Math.random().toString(36).slice(2, 6).toUpperCase();
+  return `${prefix}-${randomStr}`;
+}
+
+const basicConfig = ref();
+const initConfig = async function () {
+  try {
+    let res = await axios.get(`/config.json?t=${Date.now()}`);
+    console.log(res);
+    if (res && res.data) {
+      basicConfig.value = cloneDeep(res.data);
+    }
+    console.log("successfully");
+  } catch (error) {
+    console.error("Error:", error);
+  }
+};
+
+const initTopic = async function () {
+  topicID.value = uuidv4();
+  let data = cloneDeep(topicList.value);
+  data.unshift({
+    topic_id: topicID.value, // 新对话创建一个新的uuid，对话conv长度为0则是新对话
+    topic_name: generateRandomName(),
+    apiBaseUrl: basicConfig.value.basicUrl,
+    modelFrom: "1",
+    maxTokens: 4096, // 默认使用4096
+    modelName: "",
+    modelSelect: basicConfig.value.basicModel,
+    authHeader: { name: "Authorization", value: "" },
+    systemSetup: "",
+    conv: [],
+  });
+  jiuyuan.setTopicList(data);
+  console.log("triggerRefresh");
+  await nextTick();
+  await triggerRefresh();
+};
 
 const isCollapsible = ref(true);
 const menuItems = reactive([
   { icon: getAssetsFile("image/setting.png"), text: "设置", showPopover: false, bigicon: false, smallicon: false },
   { icon: getAssetsFile("image/clean.png"), text: "清空", showPopover: false, bigicon: false, smallicon: false },
   { icon: getAssetsFile("image/download.png"), text: "下载", showPopover: false, bigicon: false, smallicon: false },
-  // { icon: "#icon-icon_shangchuanjilu", text: "上传记录", showPopover: false },
 ]);
 
 const toggleEvent = async (index: Number) => {
@@ -336,101 +505,19 @@ const handleCloseCard = function () {
 };
 
 const jiuyuan = useJiuyuan();
-const { llmParam, apiBaseUrl, modelSelect, authHeader, systemSetup, modelName } = storeToRefs(jiuyuan);
+const { llmParam, apiBaseUrl, modelSelect, authHeader, systemSetup, modelName, topicList } = storeToRefs(jiuyuan);
 
 watch(apiBaseUrl, (newVal) => {
   console.log("API Base URL changed:", newVal);
   // 在这里执行你需要的操作，例如更新页面显示
 });
 
-const updateLLmParams = function (data: any) {
-  jiuyuan.setLlmParams(data);
-};
-
 const temp_dialogue_id = ref(0);
 
 let emit = defineEmits(["update-data"]);
 
-interface Mark {
-  style: CSSProperties;
-  label: string;
-}
-type Marks = Record<number, Mark | string>;
-const marks1 = reactive<Marks>({
-  40: {
-    style: {
-      color: "#1989FA",
-    },
-    label: "80(推荐)",
-  },
-});
-const marks2 = reactive<Marks>({
-  80: {
-    style: {
-      color: "#1989FA",
-    },
-    label: "0.8(推荐)",
-  },
-});
-const marks3 = reactive<Marks>({
-  40: {
-    style: {
-      color: "#1989FA",
-    },
-    label: "0.8(推荐)",
-  },
-});
-const initvalue1 = ref(40); // [0-200] / 2
-const initvalue2 = ref(80); // [0-100] / 100
-const initvalue3 = ref(40); // [0-200] / 100
-
-const value1 = ref(40);
-const value2 = ref(80);
-const value3 = ref(40);
-
-const initConf = function () {
-  console.log(llmParam.value);
-  if (llmParam.value.topK) {
-    console.log(1);
-    value1.value = llmParam.value.topK;
-    value2.value = llmParam.value.topP;
-    value3.value = llmParam.value.temperature;
-    console.log(value1.value);
-  } else {
-    console.log(2);
-    value1.value = JSON.parse(JSON.stringify(initvalue1.value));
-    value2.value = JSON.parse(JSON.stringify(initvalue2.value));
-    value3.value = JSON.parse(JSON.stringify(initvalue3.value));
-    let data = {
-      topK: value1.value,
-      topP: value2.value,
-      temperature: value3.value,
-    };
-    updateLLmParams(data);
-  }
-};
-
-const backConf = function () {
-  console.log(llmParam.value);
-
-  value1.value = JSON.parse(JSON.stringify(initvalue1.value));
-  value2.value = JSON.parse(JSON.stringify(initvalue2.value));
-  value3.value = JSON.parse(JSON.stringify(initvalue3.value));
-  let data = {
-    topK: value1.value,
-    topP: value2.value,
-    temperature: value3.value,
-  };
-  updateLLmParams(data);
-};
-
 const isExpanded = ref(false);
-const showNumber = function () {
-  isExpanded.value = !isExpanded.value;
-  if (isExpanded.value) {
-    document.addEventListener("click", checkClickOutside);
-  }
-};
+
 const confPlace = ref();
 const checkClickOutside = async (event: any) => {
   if (confPlace.value && event.target && !confPlace.value.contains(event.target)) {
@@ -520,7 +607,6 @@ const initConversation = ref([
     children: [],
   },
 ]);
-// You are ChatGLM3, a large language model trained by Zhipu.AI. Follow the user's instructions carefully. Respond using markdown.
 
 const conversation = ref([
   {
@@ -579,14 +665,45 @@ const test = function () {
 const tempConv = ref([]);
 // 滚动条是否平滑滚动，如果是切换分支，需要滑动，如果是api的信息，则不平滑（因为信息来源的数据发送问题）
 const isSwitchable = ref(false);
-const showDialogueList = async function () {
+const showDialogueList = async function (type) {
   // 每次进入后会把原来的记录留存，需要初始化
-  // console.log(tempConv.value);
-  tempConv.value = JSON.parse(localStorage.getItem("conv"));
-  temp_dialogue_id.value = tempConv.value.length;
-  console.log(tempConv.value);
+  tempConv.value = [];
+  console.log(topicID.value)
+  if (topicID.value != 0) {
+    let data;
+    if (type == 1) {
+      data = topicList.value[0];
+      topicID.value = data.topic_id;
+    } else {
+      data = topicList.value.find((item: any) => item.topic_id == topicID.value);
+    }
 
-  await updateConversationForLatestLeaf();
+    // topicID.value = data.topic_id;
+    console.log(data);
+    tempConv.value = data.conv;
+    if (data.conv.length == 0) {
+      let dtinit = {
+        speaker: "none",
+        content: "root-null",
+        loading: false,
+        idx: 0,
+        parentId: -1,
+        children: [],
+        currentPage: -1,
+        create_time: "1",
+        session_id: null,
+        attachments: [],
+        categories: [],
+      };
+      // 初始化 虚拟 根节点
+      // @ts-ignore
+      tempConv.value.push(dtinit);
+    }
+    temp_dialogue_id.value = tempConv.value.length;
+    console.log(tempConv.value);
+
+    await updateConversationForLatestLeaf();
+  }
 };
 
 // 查找以当前列表内最新create_time的叶子节点
@@ -779,21 +896,38 @@ const stopConversion = async function () {
 };
 
 const server_error = "服务器返回出错，请重新生成！";
+const manual_stop = "思考暂停！";
+const out_range = "内容超过最大限制，思考暂停，请重新提问！";
 // 完整信息存入数据库
-const saveData = function (data: any) {
+const saveData = function (data: any, stopReason?: any) {
   // var newConv = conversation.value[conversation.value.length - 1];
   try {
+    console.log("-------------------------------------------------------------------");
     console.log(data);
+
     if (data.input === "") {
-      let newConv = conversation.value[conversation.value.length - 1];
-      newConv.content = server_error;
-      data.input = server_error;
+      // 20250627 如果在think阶段报错，则单独处理
+      if (data.think) {
+        if (stopReason == 0) {
+        } else {
+          let newConv = conversation.value[conversation.value.length - 1];
+          // newConv.content = out_range;
+          newConv.htmlContent = mdToHtml(out_range, newConv, 1);
+          data.input = out_range;
+        }
+        // newConv.htmlThinkContent = mdToHtml(newConv.think, newConv, 2);
+      } else if (stopReason == 0) {
+        let newConv = conversation.value[conversation.value.length - 1];
+        newConv.content = server_error;
+        newConv.htmlContent = mdToHtml(server_error, newConv, 1);
+        data.input = server_error;
+      }
     }
     let res = {
       data: {
         dialogue_create_time: "",
         dialogue_id: temp_dialogue_id.value + 1,
-        topic_id: 1,
+        topic_id: topicID.value,
       },
     };
     temp_dialogue_id.value += 1; // 对话 id 自增
@@ -829,7 +963,9 @@ const getData = async function (type: any) {
     getLoading.value = true;
 
     console.log(topicID.value);
-    if (topicID.value == 0) {
+    let topicItem = topicList.value.find((item: any) => item.topic_id == topicID.value);
+
+    if (topicItem.conv && topicItem.conv.length == 0) {
       // 1.新对话，生成新的session_id
       await initUUID();
       // 初始化根节点
@@ -848,7 +984,7 @@ const getData = async function (type: any) {
       // 初始化 虚拟 根节点
       // @ts-ignore
       tempConv.value.push(dtinit);
-      topicID.value = 1;
+      // topicID.value = topicItem.value.topicID;
     } else {
       // 2.老对话，使用原来的session_id，session需要从chat中获取，topic中的不是最新的
       // console.log(conversation.value[conversation.value.length - 1].session_id)
@@ -866,29 +1002,20 @@ const getData = async function (type: any) {
       textInfo = JSON.parse(JSON.stringify(conversation.value[conversation.value.length - 1].content));
     }
 
-    // 是否是第一次请求（第一次请求没有指定topicid）
-    // let fr = topicID.value == 0 ? true : false;
-    let dp = conversation.value.length - 1;
-
     console.log(myUuid.value);
     let saveRes;
-    if (topicID.value == 0) {
+    if (topicItem.conv && topicItem.conv.length == 0) {
       let dttopic = {
         input: textInfo,
         session_id: myUuid.value,
       };
       console.log(dttopic);
       try {
-        // let resData = await aiTopicCreate(dttopic);
-        // console.log(resData);
-        // 创建话题后的第一次提问，parentId为0，指向null
-        // if (topicID.value == 0) {
         triggerRefresh();
-        // }
         let dt = {
           input: textInfo,
           parent_id: 0,
-          topic_id: 1,
+          topic_id: topicID.value,
           session_id: myUuid.value,
           content_type: 1,
         };
@@ -925,9 +1052,8 @@ const getData = async function (type: any) {
     // @ts-ignore
     // conversation.value.push(data);
     conversationAddItem(data);
-
-    console.log(dp);
-    await getInfer(textInfo, dp, 1);
+    // updateTopic();
+    await getInfer(textInfo, 1);
   }
 };
 
@@ -941,7 +1067,7 @@ const conversationAddItem = function (data: any) {
   console.log(parentNode);
   parentNode.children.push(data.idx);
 
-  console.log(parentNode)
+  console.log(parentNode);
   const childIndex = parentNode.children.indexOf(data.idx);
   if (childIndex !== -1) {
     parentNode.currentPage = childIndex + 1;
@@ -960,6 +1086,7 @@ const conversationAddItem = function (data: any) {
   conversation.value.push(data);
   console.log(tempConv.value);
   console.log(conversation.value);
+  console.log(topicID.value);
   // console.log(data);
   // console.log(data);
 };
@@ -967,17 +1094,19 @@ const conversationAddItem = function (data: any) {
 const timeout = 20000; // 超时时间设置为20秒
 const controller = ref();
 
-const getInfer = async function (textInfo: any, dp: any, type: any) {
+const getInfer = async function (textInfo: any, type: any) {
+  console.log(topicList.value);
+  console.log(topicID.value);
   console.log(type);
   console.log(textInfo);
-  console.log(dp);
   let inputs: any = [];
 
   if (systemSetup.value != "") {
     inputs.push({ role: "system", content: systemSetup.value });
   }
   conversation.value.forEach((item: any, index: any) => {
-    if (item.speaker == "none" || item.content == "" || item.speaker == "default") {
+    // || item.content == ""
+    if (item.speaker == "none" || item.speaker == "default") {
     } else {
       inputs.push({ role: item.speaker, content: item.content });
     }
@@ -996,6 +1125,12 @@ const getInfer = async function (textInfo: any, dp: any, type: any) {
     children: [],
     currentPage: -1,
     htmlContent: "",
+    think: "",
+    htmlThinkContent: "",
+    activeName: ["1"],
+    showContent: true,
+    created: 0,
+    ended: 0,
   };
 
   // 通过重新生成进入，需要在一开始构建树形结构
@@ -1006,6 +1141,7 @@ const getInfer = async function (textInfo: any, dp: any, type: any) {
 
   // @ts-ignore
   console.log(data2);
+  console.log(topicID.value);
   await conversationAddItem(data2);
 
   // 创建 AbortController 实例
@@ -1019,8 +1155,9 @@ const getInfer = async function (textInfo: any, dp: any, type: any) {
   }, timeout);
 
   console.log(myUuid.value);
+  console.log(topicID.value);
   try {
-    const response = await fetchRequest(inputs, dp);
+    const response = await fetchRequest(inputs);
     console.log(response);
     clearTimeout(timeoutId); // 清除定时器
     if (response) {
@@ -1032,32 +1169,64 @@ const getInfer = async function (textInfo: any, dp: any, type: any) {
   }
 };
 
-const fetchRequest = async function (inputs: any, dp: any) {
+const fetchRequest = async function (inputs: any) {
+  console.log(topicID.value);
+  console.log(topicList.value);
+  let topicItem = topicList.value.find((item: any) => item.topic_id == topicID.value);
+  console.log(topicItem);
   console.log("fetchRequest");
   const { signal } = controller.value;
   try {
     // 50/90/60
-    let data = JSON.stringify({
+    let dataFormat = {
       // session_id: myUuid.value,
-      model: modelSelect.value,
+      model: topicItem.modelSelect,
       messages: inputs,
       stream: true,
       // max_tokens: 4096,
       // temperature: 0.8,
       // top_p: 0.8,
-    });
+    };
+    if (topicItem.moreSet) {
+      if (topicItem.temperature) {
+        dataFormat.temperature = topicItem.temperature / 50;
+      }
+      if (topicItem.temperature) {
+        dataFormat.top_p = topicItem.topP / 100;
+      }
+      if (topicItem.maxTokens) {
+        dataFormat.max_tokens = topicItem.maxTokens;
+      }
+    }
+
+    // 自定义参数
+    if (topicItem.args && topicItem.args.length > 0) {
+      for (let a = 0; a < topicItem.args.length; a++) {
+        let obj = topicItem.args[a];
+        dataFormat[obj.key] = obj.value;
+      }
+    }
+
+    console.log(dataFormat);
+
+    let data = JSON.stringify(dataFormat);
+    // if(topicItem.temperature && topicItem.temperature != 0){
+    //   data.temperature = topicItem.temperature;
+    // }
     const headers: any = {
       "Content-Type": "application/json",
       Accept: "application/json",
       // Authorization: `Bearer ${JIUGETOKEN}`, // 使用 Bearer 方式添加令牌
     };
+
     if (authHeader.value) {
-      headers[authHeader.value.name] = authHeader.value.value;
+      headers[topicItem.authHeader.name] = topicItem.authHeader.value;
     }
     console.log(data);
-    console.log(apiBaseUrl.value);
+
+    // console.log(apiBaseUrl.value);
     // "http://172.22.162.195:8099/v1/chat/completions"
-    const response = await fetch(`${apiBaseUrl.value}`, {
+    const response = await fetch(`${topicItem.apiBaseUrl}`, {
       method: "POST",
       signal,
       headers: headers,
@@ -1089,6 +1258,7 @@ const responseProcess = async function (response: any, data2: any) {
   if (topicID.value == 0) {
     triggerRefresh();
   }
+  let stopReason = 0;
 
   while (!done) {
     const { value, done: streamDone } = await reader.read();
@@ -1103,26 +1273,40 @@ const responseProcess = async function (response: any, data2: any) {
         if (line.trim() === "") {
         } else {
           try {
-            // console.log(line)
+            console.log(line);
             // const json = JSON.parse(line)
             try {
               // Remove "data: " prefix from SSE data
               const jsonStr = line.replace("data: ", "");
-              // console.log(jsonStr)
+              console.log(jsonStr);
               const json = JSON.parse(jsonStr);
-              // console.log('Parsed data:', json);
+              console.log("Parsed data:", json);
 
               if (json.choices && json.choices.length > 0) {
                 const content = json.choices[0].delta.content;
                 if (content) {
-                  indexNum ++;
+                  indexNum++;
                   // nowContent.value += content;
                   newConv.content += content;
-                  newConv.htmlContent = mdToHtml(newConv.content, newConv);
+                  newConv.htmlContent = mdToHtml(newConv.content, newConv, 1);
+                }
+                const think = json.choices[0].delta.reasoning_content;
+                if (think) {
+                  indexNum++;
+                  // nowContent.value += content;
+                  newConv.think += think;
+                  newConv.htmlThinkContent = mdToHtml(newConv.think, newConv, 2);
                 }
               }
               if (json.choices && json.choices[0].finish_reason === "stop") {
                 console.log("done");
+                stopReason = 1;
+                // emit("stopConv", 2);
+                done = true;
+                break;
+              } else if (json.choices && json.choices[0].finish_reason === "length") {
+                console.log("done2");
+                stopReason = 2;
                 // emit("stopConv", 2);
                 done = true;
                 break;
@@ -1137,7 +1321,8 @@ const responseProcess = async function (response: any, data2: any) {
       }
     }
     if (streamDone) {
-      console.log("done2");
+      console.log("done3");
+      stopReason = 3;
       // emit("stopConv", 2);
       done = true;
     }
@@ -1152,8 +1337,11 @@ const responseProcess = async function (response: any, data2: any) {
     session_id: myUuid.value,
     content_type: 2,
   };
+  if (newConv.think) {
+    dt.think = newConv.think;
+  }
 
-  let resData = await saveData(dt);
+  let resData = await saveData(dt, stopReason);
   newConv.idx = resData.data.dialogue_id;
   const node1: any = conversation.value.find((node: any) => node.idx === data2.parentId);
   const node2: any = tempConv.value.find((node: any) => node.idx === data2.parentId);
@@ -1167,9 +1355,18 @@ const responseProcess = async function (response: any, data2: any) {
   newConv = conversation.value[conversation.value.length - 1];
   newConv.loading = false;
   console.log(conversation.value);
-  localStorage.removeItem("conv");
-  localStorage.setItem("conv", JSON.stringify(tempConv.value));
+  updateTopic();
+  // localStorage.removeItem("conv");
+  // localStorage.setItem("conv", JSON.stringify(tempConv.value));
   // localStorage.setItem("conv", JSON.stringify(conversation.value));
+};
+
+const updateTopic = function () {
+  let data = cloneDeep(topicList.value);
+  let topicItem = data.find((item: any) => item.topic_id == topicID.value);
+  topicItem.conv = cloneDeep(tempConv.value);
+  console.log(data);
+  jiuyuan.setTopicList(data);
 };
 
 // 异常离开或者切换的标志  0:初始化  1:pickTopic  2:newTalk
@@ -1195,13 +1392,16 @@ const handleError = async function (error: any, data2: any) {
     session_id: myUuid.value,
     content_type: 2,
   };
+  if (newConv.think) {
+    dt.think = newConv.think;
+  }
   console.log(leaveFlag.value);
   console.log(oldTopic.value);
   if (leaveFlag.value != 0 && oldTopic.value) {
     dt.topic_id = oldTopic.value.topic_id;
   }
   console.log(dt);
-  let resData = await saveData(dt);
+  let resData = await saveData(dt, 0);
   newConv.idx = resData.data.dialogue_id;
   console.log(555);
   const node1: any = conversation.value.find((node: any) => node.idx === data2.parentId);
@@ -1214,7 +1414,7 @@ const handleError = async function (error: any, data2: any) {
   // 如果是在推理过程中导致的，需要先存储，后初始化topic信息
   oldTopic.value = null;
   leaveFlag.value = 0;
-  
+  updateTopic();
 };
 
 // 主动中断请求，可能有很多情况都会触发
@@ -1243,20 +1443,16 @@ const abortRequest = function (type: any) {
     controller.value = null;
   } else {
     getLoading.value = false;
-    // ElMessage({
-    //   message: "尚未进入对话，请稍后进行断开操作！",
-    //   type: "warning",
-    // });
   }
 };
 
 const forkData = async function (indexData: any, content: any, type: any) {
   if (type == 1) {
-    getInfer(null, 0, 3);
+    getInfer(null, 3);
   } else {
-    getInfer(null, 0, 4);
+    getInfer(null, 4);
   }
-}
+};
 
 // 调整textarea高度的函数
 const changeHeight = () => {
@@ -1333,27 +1529,83 @@ const escapeHtml = function (html: any) {
   return html.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 };
 
+const { Renderer } = marked;
+var renderItem = new Renderer();
+var renderThinkItem = new Renderer();
 // 初始化marked，添加对代码部分的渲染
+// const renderMarkdown = function () {
+//   const renderer = {
+//     // @ts-ignore
+//     code(code: any, infostring: any, escaped: any) {
+//       // var codeHtml = code;
+//       var codeHtml = escapeHtml(code); // 先转义代码
+//       // console.log(infostring);
+//       if (infostring && infostring == "html") {
+//         console.log("encodeURIComponent");
+//         codeHtml = encodeURIComponent(code);
+//       }
+//       if (infostring) {
+//         // console.log("hljs");
+//         codeHtml = hljs.highlightAuto(code).value;
+//       }
+//       if (infostring.trim() === "") {
+//         infostring = "bash";
+//       }
+//       // console.log(code, infostring, escaped, codeHtml);
+//       return `<div class="bg-white mb-4 rounded-md">
+//       <div class="code_header flex items-center relative text-gray-200 bg-gray-800 px-4 py-2 text-xs font-sans">
+//         <span>${infostring || ""}</span>
+//         <button onclick="copy(this)" class="copy-btn">
+//           <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+//             <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+//           </svg>
+//           <span>Copy code</span>
+//           <code style="display:none">${encodeURIComponent(code)}</code>
+//         </button>
+//       </div>
+
+//       <div class="p-4 overflow-y-auto">
+//         <code class="whitespace-pre hljs language-${infostring}">${codeHtml}</code>
+//       </div>
+//     </div>`;
+//     },
+//     // 处理段落（保留换行）
+//     paragraph(text: any) {
+//       // console.log(text);
+//       return `<p style="white-space:pre-wrap;">${text}</p >`;
+//     },
+//     // 新增：处理链接，打开新窗口
+//     link(href, title, text) {
+//       let out = `<a href="${href}" target="_blank"`;
+//       if (title) {
+//         out += ` title="${title}"`;
+//       }
+//       out += `>${text}</a>`;
+//       return out;
+//     },
+//   };
+//   // marked.use({ renderer });
+//   return renderer;
+// };
 const renderMarkdown = function () {
-  const renderer = {
-    // @ts-ignore
-    code(code: any, infostring: any, escaped: any) {
-      // var codeHtml = code;
-      var codeHtml = escapeHtml(code); // 先转义代码
-      // console.log(infostring);
-      if (infostring && infostring == "html") {
-        console.log("encodeURIComponent");
-        codeHtml = encodeURIComponent(code);
-      }
-      if (infostring) {
-        // console.log("hljs");
-        codeHtml = hljs.highlightAuto(code).value;
-      }
-      if (infostring.trim() === "") {
-        infostring = "bash";
-      }
-      // console.log(code, infostring, escaped, codeHtml);
-      return `<div class="bg-white mb-4 rounded-md">
+  // @ts-ignore
+  renderItem.code = function (code: any, infostring: any, escaped: any) {
+    // var codeHtml = code;
+    var codeHtml = escapeHtml(code); // 先转义代码
+    // console.log(infostring);
+    if (infostring && infostring == "html") {
+      console.log("encodeURIComponent");
+      codeHtml = encodeURIComponent(code);
+    }
+    if (infostring) {
+      // console.log("hljs");
+      codeHtml = hljs.highlightAuto(code).value;
+    }
+    if (infostring.trim() === "") {
+      infostring = "bash";
+    }
+    // console.log(code, infostring, escaped, codeHtml);
+    return `<div class="bg-white mb-4 rounded-md">
       <div class="code_header flex items-center relative text-gray-200 bg-gray-800 px-4 py-2 text-xs font-sans">
         <span>${infostring || ""}</span>
         <button onclick="copy(this)" class="copy-btn">
@@ -1369,24 +1621,75 @@ const renderMarkdown = function () {
         <code class="whitespace-pre hljs language-${infostring}">${codeHtml}</code>
       </div>
     </div>`;
-    },
-    paragraph(text: any) {
-      // console.log(text);
-      return `<p style="white-space:pre-wrap;">${text}</p >`;
-    },
   };
-  marked.use({ renderer });
+  // 处理段落（保留换行）
+  renderItem.paragraph = function (text: any) {
+    // console.log(text);
+    return `<p style="white-space:pre-wrap;">${text}</p >`;
+  };
+  // 新增：处理链接，打开新窗口
+  renderItem.link = function (href, title, text) {
+    let out = `<a href="${href}" target="_blank"`;
+    if (title) {
+      out += ` title="${title}"`;
+    }
+    out += `>${text}</a>`;
+    return out;
+  };
+};
+const renderThinkMarkdown = function () {
+  // @ts-ignore
+  renderThinkItem.code = function (code: any, infostring: any, escaped: any) {
+    // var codeHtml = code;
+    var codeHtml = escapeHtml(code); // 先转义代码
+    // console.log(infostring);
+    if (infostring && infostring == "html") {
+      console.log("encodeURIComponent");
+      codeHtml = encodeURIComponent(code);
+    }
+    if (infostring) {
+      // console.log("hljs");
+      codeHtml = hljs.highlightAuto(code).value;
+    }
+    if (infostring.trim() === "") {
+      infostring = "bash";
+    }
+    // console.log(code, infostring, escaped, codeHtml);
+    return `<div class="bg-grey mb-4 rounded-md">
+      <div class="pg-4 overflow-y-auto">
+        <code class="whitespace-pre language-${infostring}">${codeHtml}</code>
+      </div>
+    </div>`;
+  };
+  // 处理段落（保留换行）
+  renderThinkItem.paragraph = function (text: any) {
+    // console.log(text);
+    return `<p style="white-space:pre-wrap;">${text}</p >`;
+  };
+  // 新增：处理链接，打开新窗口
+  renderThinkItem.link = function (href, title, text) {
+    let out = `<a href="${href}" target="_blank"`;
+    if (title) {
+      out += ` title="${title}"`;
+    }
+    out += `>${text}</a>`;
+    return out;
+  };
+
+  // marked.use({ renderer });
+  // return renderer;
 };
 
 // @ts-ignore
-const mdToHtml = function (md: any, conv: any) {
+const mdToHtml = function (md: any, conv: any, type: any) {
   // console.log(md)
   if (md == "") {
     return "<p></p>";
   }
   // md = this.countAndConcat(md, "```")
   // console.log(md)
-  var htmlMD = marked.parse(md);
+  let renderer = type === 1 ? renderItem : renderThinkItem;
+  var htmlMD = marked.parse(md, { renderer });
   htmlMD = htmlMD.trim();
   return htmlMD;
 };
@@ -1568,6 +1871,9 @@ const reReEdit = async function (item: any, index: number) {
     session_id: myUuid.value,
     content_type: 1,
   };
+  // if (newConv.think) {
+  //   dt.think = newConv.think;
+  // }
   console.log(dt);
   let saveRes = await saveData(dt);
   console.log(saveRes);
@@ -1764,7 +2070,7 @@ const beforeUnloadHandler = function (e: any) {
   }
 };
 
-const initTemp = function(){
+const initTemp = function () {
   // let data = {
   //         speaker: "user",
   //         content: item.text,
@@ -1781,13 +2087,16 @@ const initTemp = function(){
   //       tempConv.value.push(data);
   console.log(conversation.value);
   console.log(tempConv.value);
-  showDialogueList();
-}
+  showDialogueList(1);
+};
 
 const clearChat = function () {
-  localStorage.removeItem("conv");
-  conversation.value = JSON.parse(JSON.stringify(initConversation.value));
-  console.log(conversation.value);
+  sessionStorage.removeItem("topicList");
+  let data = cloneDeep(topicList.value);
+  let topicItem = data.find((item: any) => item.topic_id == topicID.value);
+  topicItem.conv = [];
+  jiuyuan.setTopicList(data);
+  showDialogueList(2);
 };
 
 const downloadChat = function () {
@@ -1812,21 +2121,23 @@ const downloadChat = function () {
   URL.revokeObjectURL(url);
 };
 
-
 // 在组件挂载后初始化
 onMounted(async () => {
-  // localStorage.getItem("")
-  let ccc: any = localStorage.getItem("conv");
-  if (ccc) {
-    topicID.value = 1;
-    // conversation.value = JSON.parse(ccc);
+  let ccc: any = topicList.value;
+  console.log(topicList.value)
+  await initConfig();
+  if (ccc && ccc.length > 0) {
+    topicID.value = topicList.value[0].topic_id;
     initTemp();
+  } else {
+    initTopic();
   }
 
+
   (window as any).copy = vueCopy;
-  // initUUID();
-  initConf();
-  await renderMarkdown();
+
+  renderItem.value = await renderMarkdown();
+  renderThinkItem.value = await renderThinkMarkdown();
   if (inputChat.value) {
     changeHeight();
   }
@@ -1886,31 +2197,72 @@ watch(
 );
 
 // 监听变量变化并更新 Pinia Store
-watch([value1, value2, value3], ([newVal1, newVal2, newVal3]) => {
-  let data = {
-    topK: newVal1,
-    topP: newVal2,
-    temperature: newVal3,
-  };
-  updateLLmParams(data);
-});
+// watch([value1, value2, value3], ([newVal1, newVal2, newVal3]) => {
+//   let data = {
+//     topK: newVal1,
+//     topP: newVal2,
+//     temperature: newVal3,
+//   };
+//   updateLLmParams(data);
+// });
 </script>
 
 <style scoped>
-.conf-btn{
+.conf-btn {
   position: absolute;
   background: #b1e0fb;
   top: 40px;
 }
 
-.conf-btn-2{
+.ai-c1-think {
+  margin-bottom: 4px;
+}
+
+.think-title {
+  background: rgb(245, 245, 245);
+  display: flex;
+  align-items: center;
+  border-radius: 8px;
+  padding: 6px 10px 4px 12px;
+  font-size: 12px;
+  height: 24px;
+}
+
+.icon-move {
+  margin-left: 10px;
+  transition: transform 0.3s;
+}
+
+.move {
+  transform: rotateZ(-180deg);
+}
+
+.chat-class {
+  width: calc(100%);
+  height: calc(100%);
+  padding: 0;
+  display: flex;
+}
+
+.bottom-item {
+  min-height: 116px;
+  position: absolute;
+  left: calc(20% + 50px);
+  transform: translateX(0);
+  bottom: 40px;
+  width: calc(80% - 240px);
+  padding: 0 70px;
+  background: #ffffff;
+}
+
+.conf-btn-2 {
   margin-left: 0;
   position: absolute;
   background: #b1e0fb;
   top: 80px;
 }
 
-.conf-btn-3{
+.conf-btn-3 {
   margin-left: 0;
   position: absolute;
   background: #b1e0fb;
@@ -1935,6 +2287,18 @@ watch([value1, value2, value3], ([newVal1, newVal2, newVal3]) => {
   top: -1px;
   transition: width 0.3s ease;
   /* box-shadow: 3px 4px 16px rgba(2, 84, 172, 0.4); */
+}
+
+.resend-btn {
+  height: 45px;
+  padding: 10px 30px;
+  border-radius: 18px;
+  /* background: rgb(13, 13, 13); */
+  background: rgb(5 96 178);
+}
+
+.resend-btn:hover {
+  background-color: #4097f7;
 }
 
 .menu_item {
@@ -2057,16 +2421,50 @@ watch([value1, value2, value3], ([newVal1, newVal2, newVal3]) => {
   margin-left: 1px;
 }
 
-@media only screen and (max-width: 1440px) {
+.resend-text {
+  color: #eee;
+  font-size: 18px;
+  margin-right: 10px;
+  /* font-weight: bold; */
+}
 
+@media only screen and (min-width: 1441px) and (max-width: 1920px) {
+  .resend-btn {
+    height: 42px;
+    padding: 10px 28px;
+    border-radius: 16px;
+  }
+
+  .resend-text {
+    font-size: 16px;
+    margin-right: 8px;
+  }
+}
+
+@media only screen and (max-width: 1440px) {
   .side_menu {
     right: -10px;
     top: -6px;
   }
-}
 
+  .resend-btn {
+    height: 36px;
+    padding: 8px 18px;
+    border-radius: 16px;
+  }
+
+  .resend-text {
+    font-size: 14px;
+    margin-right: 6px;
+  }
+}
 </style>
 
 <style>
+.ai-c3 .btn-tooltip,
+.edit-btn-out .el-button.is-link {
+  height: 30px;
+  width: 30px;
+}
 
 </style>

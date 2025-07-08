@@ -13,13 +13,14 @@ export const useJiuyuan = defineStore('jiuyuan', {
       modelSelect: sessionStorage.getItem('modelSelect'),
       authHeader: JSON.parse(sessionStorage.getItem('authHeader') || '{"name": "Authorization", "value": ""}'),
       systemSetup: JSON.parse(sessionStorage.getItem('systemSetup')) 
-        || "You are ChatGLM3, a large language model trained by Zhipu.AI. Follow the user's instructions carefully. Respond using markdown.",
+        || "",
 
       llmParam: JSON.parse(sessionStorage.getItem('llmParam')) || {
         topK: 40, // 0-200
         topP: 80, // 0-1
         temperature: 40, // 0-2
       },
+      topicList: JSON.parse(sessionStorage.getItem('topicList'))|| [], // 存储每个对话使用的模型配置，以及对话历史
     }
   },
   // 相当于计算属性
@@ -77,6 +78,10 @@ export const useJiuyuan = defineStore('jiuyuan', {
     },
     clearLlmParams(){
       sessionStorage.removeItem('llmParam');
-    }
+    },
+    setTopicList(list: string) {
+      this.topicList = list;
+      sessionStorage.setItem('topicList', JSON.stringify(list));
+    },
   },
 })
