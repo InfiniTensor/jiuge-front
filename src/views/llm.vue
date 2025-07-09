@@ -432,7 +432,7 @@ function generateRandomName(prefix = "话题") {
 const basicConfig = ref();
 const initConfig = async function () {
   try {
-    let res = await axios.get(`/config.json?t=${Date.now()}`);
+    let res = await axios.get(`./config.json?t=${Date.now()}`);
     console.log(res);
     if (res && res.data) {
       basicConfig.value = cloneDeep(res.data);

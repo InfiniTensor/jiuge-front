@@ -108,13 +108,13 @@ http {
 
 ## 方法四：使用 docker
 
-+ 分别生成了各个平台下的docker镜像，在目录docker下，包含nginx和前端项目，一键启动即可
++ 分别生成了各个平台下的docker镜像，也在release中，后缀_docker的文件即是，包含nginx和前端项目，一键启动即可
 
   + linux/amd64
-  + linux/arm64
+  + linux/arm64/v8
   + linux/arm/v7
-  + linux/arm/v6
   + linux/ppc64le
+  + linux/mips64le
   + linux/s390x
   + linux/386
 

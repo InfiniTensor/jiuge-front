@@ -179,7 +179,7 @@ const modelConfig = ref();
 const basicConfig = ref();
 const getModelConfig = async function () {
   try {
-    let res = await axios.get(`/config.json?t=${Date.now()}`);
+    let res = await axios.get(`./config.json?t=${Date.now()}`);
     console.log(res);
     if (res && res.data) {
       basicConfig.value = cloneDeep(res.data);

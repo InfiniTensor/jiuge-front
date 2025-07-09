@@ -1,0 +1,25 @@
+{
+  "basicUrl": "http://172.22.168.216:9090/chat/completions",
+  "basicModel": "FM9G-7B",
+  "modelConfig": [
+    {
+      "id": "FM9G-7B",
+      "maxTokens": 4096,
+      "temperature": 35,
+      "topP": 70
+    },
+    {
+      "id": "DeepSeek-32B",
+      "maxTokens": 32768,
+      "temperature": 45,
+      "topP": 60,
+      "think": true
+    },
+    {
+      "id": "FM9G-70B",
+      "maxTokens": 8192,
+      "temperature": 35,
+      "topP": 70
+    }
+  ]
+}
