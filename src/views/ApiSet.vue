@@ -146,10 +146,16 @@ const removeParam = (index) => {
 const getMaxTokens = function () {
   // 1280000
   if (form.value.modelFrom == "1" && form.value.modelSelect) {
-    const foundModel = modelConfig.value.find((m) => m.id === form.value.modelSelect);
+    let foundModel = "";
+    if(modelConfig.value && topicItem.modelSelect){
+      foundModel = modelConfig.value.find((m) => m.id === form.value.modelSelect);
+      return JSON.parse(JSON.stringify(foundModel.maxTokens));
+    }
+    // const foundModel = modelConfig.value.find((m) => m.id === form.value.modelSelect);
     // form.value.maxTokens = JSON.parse(JSON.stringify(foundModel.maxTokens));
     console.log(foundModel);
-    return JSON.parse(JSON.stringify(foundModel.maxTokens));
+    return 1280000;
+    // return JSON.parse(JSON.stringify(foundModel.maxTokens));
   } else {
     return 1280000;
   }
@@ -337,7 +343,10 @@ const initForm = function () {
       form.value.moreSet = false;
     }
 
-    const foundModel = modelConfig.value.find((m) => m.id === topicItem.modelSelect);
+    let foundModel = "";
+    if(modelConfig.value && topicItem.modelSelect){
+      foundModel = modelConfig.value.find((m) => m.id === topicItem.modelSelect);
+    }
     console.log(modelConfig.value);
     console.log(foundModel);
     if (topicItem.think) {
