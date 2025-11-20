@@ -40,6 +40,11 @@
             <el-input v-model="form.systemSetup" maxlength="255" show-word-limit placeholder="系统设定" :disabled="editable" />
           </el-form-item>
 
+          <el-form-item label="流式输出" style="margin-bottom: 0">
+            <el-switch v-model="form.stream" />
+          </el-form-item>
+          <div class="label-text">是否启用流式输出，关闭后将一次性返回完整响应</div>
+          
           <el-form-item label="更多配置">
             <el-switch v-model="form.moreSet" />
           </el-form-item>
@@ -262,6 +267,7 @@ const initFormItem = ref({
   maxTokens: 4096,
   think: false,
   moreSet: false,
+  stream: true, // 默认启用流式输出
   args: [],
 });
 
@@ -279,6 +285,7 @@ const form = ref({
   maxTokens: 4096,
   think: false,
   moreSet: false,
+  stream: true, // 默认启用流式输出
   args: [],
 });
 
@@ -341,6 +348,12 @@ const initForm = function () {
       form.value.moreSet = JSON.parse(JSON.stringify(topicItem.moreSet));
     } else {
       form.value.moreSet = false;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(topicItem, "stream")) {
+      form.value.stream = JSON.parse(JSON.stringify(topicItem.stream));
+    } else {
+      form.value.stream = true; // 默认启用流式输出
     }
 
     let foundModel = "";
@@ -472,6 +485,7 @@ const submit = (formEl: any) => {
         topicItem.temperature = form.value.temperature;
         topicItem.maxTokens = form.value.maxTokens;
         topicItem.topP = form.value.topP;
+        topicItem.stream = form.value.stream;
 
         topicItem.args = form.value.args;
 

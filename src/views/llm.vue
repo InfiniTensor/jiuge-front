@@ -1182,7 +1182,7 @@ const fetchRequest = async function (inputs: any) {
       // session_id: myUuid.value,
       model: topicItem.modelSelect,
       messages: inputs,
-      stream: true,
+      stream: topicItem.stream !== undefined ? topicItem.stream : true,
       // max_tokens: 4096,
       // temperature: 0.8,
       // top_p: 0.8,
@@ -1246,11 +1246,6 @@ const fetchRequest = async function (inputs: any) {
 const responseProcess = async function (response: any, data2: any) {
   let indexNum: Number = 0;
   console.log("responseProcess");
-  const reader: any = response.body?.getReader();
-  let result: any = "";
-  let done = false;
-
-  console.log("start parse process");
 
   let newConv = conversation.value[conversation.value.length - 1];
   // let tempxxx;
@@ -1260,71 +1255,111 @@ const responseProcess = async function (response: any, data2: any) {
   }
   let stopReason = 0;
 
-  while (!done) {
-    const { value, done: streamDone } = await reader.read();
+  // 判断是否为流式输出
+  let topicItem = topicList.value.find((item: any) => item.topic_id == topicID.value);
+  const isStream = topicItem?.stream !== undefined ? topicItem.stream : true;
 
-    if (value) {
-      const decoder = new TextDecoder();
-      result += decoder.decode(value);
-      const lines = result.split("\n");
-      result = lines.pop();
+  if (isStream) {
+    // 流式输出处理（原有逻辑）
+    const reader: any = response.body?.getReader();
+    let result: any = "";
+    let done = false;
 
-      for (const line of lines) {
-        if (line.trim() === "") {
-        } else {
-          try {
-            console.log(line);
-            // const json = JSON.parse(line)
+    console.log("start parse process");
+
+    while (!done) {
+      const { value, done: streamDone } = await reader.read();
+
+      if (value) {
+        const decoder = new TextDecoder();
+        result += decoder.decode(value);
+        const lines = result.split("\n");
+        result = lines.pop();
+
+        for (const line of lines) {
+          if (line.trim() === "") {
+          } else {
             try {
-              // Remove "data: " prefix from SSE data
-              const jsonStr = line.replace("data: ", "");
-              console.log(jsonStr);
-              const json = JSON.parse(jsonStr);
-              console.log("Parsed data:", json);
+              console.log(line);
+              // const json = JSON.parse(line)
+              try {
+                // Remove "data: " prefix from SSE data
+                const jsonStr = line.replace("data: ", "");
+                console.log(jsonStr);
+                const json = JSON.parse(jsonStr);
+                console.log("Parsed data:", json);
 
-              if (json.choices && json.choices.length > 0) {
-                const content = json.choices[0].delta.content;
-                if (content) {
-                  indexNum++;
-                  // nowContent.value += content;
-                  newConv.content += content;
-                  newConv.htmlContent = mdToHtml(newConv.content, newConv, 1);
+                if (json.choices && json.choices.length > 0) {
+                  const content = json.choices[0].delta.content;
+                  if (content) {
+                    indexNum++;
+                    // nowContent.value += content;
+                    newConv.content += content;
+                    newConv.htmlContent = mdToHtml(newConv.content, newConv, 1);
+                  }
+                  const think = json.choices[0].delta.reasoning_content;
+                  if (think) {
+                    indexNum++;
+                    // nowContent.value += content;
+                    newConv.think += think;
+                    newConv.htmlThinkContent = mdToHtml(newConv.think, newConv, 2);
+                  }
                 }
-                const think = json.choices[0].delta.reasoning_content;
-                if (think) {
-                  indexNum++;
-                  // nowContent.value += content;
-                  newConv.think += think;
-                  newConv.htmlThinkContent = mdToHtml(newConv.think, newConv, 2);
+                if (json.choices && json.choices[0].finish_reason === "stop") {
+                  console.log("done");
+                  stopReason = 1;
+                  // emit("stopConv", 2);
+                  done = true;
+                  break;
+                } else if (json.choices && json.choices[0].finish_reason === "length") {
+                  console.log("done2");
+                  stopReason = 2;
+                  // emit("stopConv", 2);
+                  done = true;
+                  break;
                 }
-              }
-              if (json.choices && json.choices[0].finish_reason === "stop") {
-                console.log("done");
-                stopReason = 1;
-                // emit("stopConv", 2);
-                done = true;
-                break;
-              } else if (json.choices && json.choices[0].finish_reason === "length") {
-                console.log("done2");
-                stopReason = 2;
-                // emit("stopConv", 2);
-                done = true;
-                break;
+              } catch (e) {
+                console.error("Error parsing data:", e);
               }
             } catch (e) {
-              console.error("Error parsing data:", e);
+              console.error(e);
             }
-          } catch (e) {
-            console.error(e);
           }
         }
       }
+      if (streamDone) {
+        console.log("done3");
+        stopReason = 3;
+        // emit("stopConv", 2);
+        done = true;
+      }
     }
-    if (streamDone) {
-      console.log("done3");
-      stopReason = 3;
-      // emit("stopConv", 2);
-      done = true;
+  } else {
+    // 非流式输出处理
+    console.log("start parse process (non-stream)");
+    try {
+      const json = await response.json();
+      if (json.choices && json.choices.length > 0) {
+        const choice = json.choices[0];
+        if (choice.message?.content) {
+          newConv.content = choice.message.content;
+          newConv.htmlContent = mdToHtml(newConv.content, newConv, 1);
+        }
+        if (choice.message?.reasoning_content) {
+          newConv.think = choice.message.reasoning_content;
+          newConv.htmlThinkContent = mdToHtml(newConv.think, newConv, 2);
+        }
+        if (choice.finish_reason === "stop") {
+          stopReason = 1;
+        } else if (choice.finish_reason === "length") {
+          stopReason = 2;
+        } else {
+          stopReason = 1;
+        }
+      }
+    } catch (e) {
+      console.error("Error parsing non-stream response:", e);
+      stopReason = 0;
     }
   }
 
